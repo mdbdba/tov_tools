@@ -2,6 +2,7 @@
 package character
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,5 +26,19 @@ func TestGetClass(t *testing.T) {
 	assert.ElementsMatch(t, []string{"light armor", "medium armor", "shields", "weapons"}, class.EquipmentProficiencies)
 
 	_, err = GetClass("nonexistentclass")
+	assert.Error(t, err)
+}
+
+func TestRandomClass(t *testing.T) {
+	randomClass := RandomClass()
+	lowerName := strings.ToLower(randomClass.Name)
+	_, exists := Classes[lowerName]
+	assert.True(t, exists, "Randomly selected class should exist in Classes")
+}
+
+func TestGetClassByName(t *testing.T) {
+	_, err := GetClassByName("barbarian")
+	assert.NoError(t, err)
+	_, err = GetClassByName("nonexistent")
 	assert.Error(t, err)
 }
