@@ -65,9 +65,9 @@ func getRolls(sides int, timesToRoll int) (*[]int, error) {
 	for i := 0; i < timesToRoll; i++ {
 		value, err := rand.Int(rand.Reader, big.NewInt(int64(sides)))
 		if err != nil {
-			return &[]int{}, err
+			return nil, err
 		}
-		t := int(value.Int64()) + 1 // +1 because dice start at 1 not 0
+		t := int(value.Int64()) + 1 // +1 because dice start at 1, not 0
 		rolls = append(rolls, t)
 	}
 	return &rolls, nil

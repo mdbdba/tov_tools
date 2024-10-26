@@ -1,7 +1,6 @@
 package character
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -135,7 +134,7 @@ func TestGetPreGeneratedAbilityArray(t *testing.T) {
 	a := GetPreGeneratedAbilityArray(Raw, ArchetypeBonus,
 		ArchetypeBonusIgnored, LevelChangeIncrease,
 		AdditionalBonus, ctxRef, isMonsterOrGod)
-	fmt.Println(a.ToPrettyString())
+	// fmt.Println(a.ToPrettyString())
 	assert.Equal(t, 20, a.Values["str"])
 	assert.Equal(t, 15, a.Values["cha"])
 	assert.Equal(t, 19, a.Values["dex"])
@@ -227,7 +226,7 @@ func TestAdjustValues(t *testing.T) {
 	assert.Equal(t, 2, actual)
 	actual, _ = a.GetModifier("int")
 	assert.Equal(t, -1, actual)
-	fmt.Println(a.ToPrettyString())
+	// fmt.Println(a.ToPrettyString())
 
 	allLogs := observedLogs.All()
 	assert.Equal(t, "AdjustValues", allLogs[len(allLogs)-1].Message)

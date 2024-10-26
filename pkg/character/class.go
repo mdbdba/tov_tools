@@ -29,12 +29,16 @@ func GetClass(name string) (Class, error) {
 
 // RandomClass returns a randomly selected Class
 func RandomClass() Class {
+	seed := time.Now().UnixNano()
+	randomSource := rand.NewSource(seed)
+	randomGenerator := rand.New(randomSource)
+
 	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
 	keys := make([]string, 0, len(Classes))
 	for key := range Classes {
 		keys = append(keys, key)
 	}
-	randomKey := keys[rand.Intn(len(keys))]
+	randomKey := keys[randomGenerator.Intn(len(keys))]
 	return Classes[randomKey]
 }
 
