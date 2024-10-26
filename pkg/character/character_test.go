@@ -21,8 +21,9 @@ func TestCharacterCreation(t *testing.T) {
 
 	chosenSize := "Medium"
 	chosenTraits := map[string]string{
-		"Animal Instinct": "Perception",
-		"Natural Weapons": "Claws",
+		"Animal Instinct":    "Perception",
+		"Natural Weapons":    "Claws",
+		"Natural Adaptation": "Avian",
 	}
 
 	myCharacter := Character{
@@ -44,9 +45,9 @@ func TestCharacterCreation(t *testing.T) {
 	}
 
 	// Check lineage source
-	t_search_string := "Players Guide, pg 105"
-	if myCharacter.Lineage.LineageSource != t_search_string {
-		t.Errorf("Expected lineage source to be '%s', but got '%s'", t_search_string, myCharacter.Lineage.LineageSource)
+	tSearchString := "Players Guide, pg 105"
+	if myCharacter.Lineage.LineageSource != tSearchString {
+		t.Errorf("Expected lineage source to be '%s', but got '%s'", tSearchString, myCharacter.Lineage.LineageSource)
 	}
 
 	// Check chosen size
@@ -60,6 +61,9 @@ func TestCharacterCreation(t *testing.T) {
 	}
 	if myCharacter.ChosenTraits["Natural Weapons"] != "Claws" {
 		t.Errorf("Expected 'Natural Weapons' trait to be 'Claws', but got '%s'", myCharacter.ChosenTraits["Natural Weapons"])
+	}
+	if myCharacter.ChosenTraits["Natural Adaptation"] != "Avian" {
+		t.Errorf("Expected 'Natural Adaptation' trait to be 'Avian', but got '%s'", myCharacter.ChosenTraits["Natural Weapons"])
 	}
 }
 

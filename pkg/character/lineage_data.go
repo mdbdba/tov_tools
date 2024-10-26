@@ -15,6 +15,10 @@ var Lineages = map[string]Lineage{
 				NumberToSelect: 1,
 				Options:        []string{"Claws", "Horns", "Hooves", "Fangs", "Spines"},
 			},
+			"Natural Adaptation": TraitChoices{
+				NumberToSelect: 1,
+				Options:        []string{"Avian", "Agile", "Aquatic", "Sturdy"},
+			},
 		},
 		LineageSource: "Players Guide, pg 105",
 	},
