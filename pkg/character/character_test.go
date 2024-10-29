@@ -1,13 +1,17 @@
 package character
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
+	"tov_tools/pkg/helpers"
 )
 
-func TestCharacterCreation(t *testing.T) {
-	beastkinLineage, exists := Lineages["beastkin"]
+// Helper function to create a character
+func createCharacter(name, lineageKey, size string, optionalTraits map[string]string) (Character, error) {
+	lineage, exists := Lineages[lineageKey]
 	if !exists {
-		t.Fatalf("Lineage 'beastkin' not found")
+		return Character{}, fmt.Errorf("Lineage '%s' not found", lineageKey)
 	}
 
 	urbanHeritage := Heritage{
@@ -19,82 +23,131 @@ func TestCharacterCreation(t *testing.T) {
 		},
 	}
 
-	chosenSize := "Medium"
-	chosenTraits := map[string]string{
-		"Animal Instinct":    "Perception",
-		"Natural Weapons":    "Claws",
-		"Natural Adaptation": "Avian",
-	}
-
-	myCharacter := Character{
-		Name:         "Fang",
-		Lineage:      beastkinLineage,
+	return Character{
+		Name:         name,
+		Lineage:      lineage,
 		Heritage:     urbanHeritage,
-		ChosenSize:   chosenSize,
-		ChosenTraits: chosenTraits,
-	}
-
-	// Check character's name
-	if myCharacter.Name != "Fang" {
-		t.Errorf("Expected name to be 'Fang', but got '%s'", myCharacter.Name)
-	}
-
-	// Check lineage
-	if myCharacter.Lineage.Name != "Beastkin" {
-		t.Errorf("Expected lineage name to be 'Beastkin', but got '%s'", myCharacter.Lineage.Name)
-	}
-
-	// Check lineage source
-	tSearchString := "Players Guide, pg 105"
-	if myCharacter.Lineage.LineageSource != tSearchString {
-		t.Errorf("Expected lineage source to be '%s', but got '%s'", tSearchString, myCharacter.Lineage.LineageSource)
-	}
-
-	// Check chosen size
-	if myCharacter.ChosenSize != "Medium" {
-		t.Errorf("Expected chosen size to be 'Medium', but got '%s'", myCharacter.ChosenSize)
-	}
-
-	// Check chosen traits
-	if myCharacter.ChosenTraits["Animal Instinct"] != "Perception" {
-		t.Errorf("Expected 'Animal Instinct' trait to be 'Perception', but got '%s'", myCharacter.ChosenTraits["Animal Instinct"])
-	}
-	if myCharacter.ChosenTraits["Natural Weapons"] != "Claws" {
-		t.Errorf("Expected 'Natural Weapons' trait to be 'Claws', but got '%s'", myCharacter.ChosenTraits["Natural Weapons"])
-	}
-	if myCharacter.ChosenTraits["Natural Adaptation"] != "Avian" {
-		t.Errorf("Expected 'Natural Adaptation' trait to be 'Avian', but got '%s'", myCharacter.ChosenTraits["Natural Weapons"])
-	}
+		ChosenSize:   size,
+		ChosenTraits: optionalTraits,
+	}, nil
 }
 
-func TestPrintDetails(t *testing.T) {
-	beastkinLineage, exists := Lineages["beastkin"]
-	if !exists {
-		t.Fatalf("Lineage 'beastkin' not found")
-	}
-
-	urbanHeritage := Heritage{
-		Name:               "Urban",
-		SkillProficiencies: []string{"Stealth", "Persuasion"},
-		Languages:          []string{"Common", "Elvish"},
-		CulturalTraits: map[string]string{
-			"City Navigation": "Bonus to find your way in big cities",
+func TestCharacterCreation(t *testing.T) {
+	lineageTests := []struct {
+		name               string
+		lineageKey         string
+		predefinedTraits   []string
+		selectedTraits     map[string]string
+		expectedLineageSrc string
+		expectedSize       string
+	}{
+		{
+			name:               "Fang",
+			lineageKey:         "beastkin",
+			expectedLineageSrc: "Players Guide, pg 105",
+			expectedSize:       "Medium",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["beastkin"].Traits),
+			selectedTraits:     map[string]string{"Animal Instinct": "Perception", "Natural Weapons": "Claws"},
+		},
+		{
+			name:               "Gimli",
+			lineageKey:         "dwarf",
+			expectedLineageSrc: "Players Guide, pg 106",
+			expectedSize:       "Medium",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["dwarf"].Traits),
+			selectedTraits:     map[string]string{},
+		},
+		{
+			name:               "Legolas",
+			lineageKey:         "elf",
+			expectedLineageSrc: "Players Guide, pg 106",
+			expectedSize:       "Medium",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["elf"].Traits),
+			selectedTraits:     map[string]string{},
+		},
+		{
+			name:               "Aragorn",
+			lineageKey:         "human",
+			expectedLineageSrc: "Players Guide, pg 107",
+			expectedSize:       "Medium", // Or "Small" based on specific test cases
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["human"].Traits),
+			selectedTraits:     map[string]string{},
+		},
+		{
+			name:               "Tik",
+			lineageKey:         "kobold",
+			expectedLineageSrc: "Players Guide, pg 108",
+			expectedSize:       "Small",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["kobold"].Traits),
+			selectedTraits:     map[string]string{"Natural Adaptation": "Fierce (Small)"},
+		},
+		{
+			name:               "Rog",
+			lineageKey:         "orc",
+			expectedLineageSrc: "Players Guide, pg 108",
+			expectedSize:       "Medium",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["orc"].Traits),
+			selectedTraits:     map[string]string{},
+		},
+		{
+			name:               "Alien",
+			lineageKey:         "syderean",
+			expectedLineageSrc: "Players Guide, pg 109",
+			expectedSize:       "Medium",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["syderean"].Traits),
+			selectedTraits:     map[string]string{"Natural Adaptation": "Celestial"},
+		},
+		{
+			name:               "Frodo",
+			lineageKey:         "smallfolk",
+			expectedLineageSrc: "Players Guide, pg 109",
+			expectedSize:       "Small",
+			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["smallfolk"].Traits),
+			selectedTraits:     map[string]string{"Natural Adaptation": "Halfling"},
 		},
 	}
 
-	chosenSize := "Medium"
-	chosenTraits := map[string]string{
-		"Animal Instinct": "Perception",
-		"Natural Weapons": "Claws",
-	}
+	for _, testLineage := range lineageTests {
+		character, err := createCharacter(testLineage.name, testLineage.lineageKey, testLineage.expectedSize, testLineage.selectedTraits)
+		if err != nil {
+			t.Fatalf("Error creating character: %v", err)
+		}
 
-	myCharacter := Character{
-		Name:         "Fang",
-		Lineage:      beastkinLineage,
-		Heritage:     urbanHeritage,
-		ChosenSize:   chosenSize,
-		ChosenTraits: chosenTraits,
-	}
+		// Check character's name
+		if character.Name != testLineage.name {
+			t.Errorf("Expected name to be '%s', but got '%s'", testLineage.name, character.Name)
+		}
 
-	myCharacter.PrintDetails() // This is primarily a visual check
+		// Check lineage
+		if character.Lineage.Name != helpers.ToTitleCase(testLineage.lineageKey) {
+			t.Errorf("Expected lineage name to be '%s', but got '%s'", helpers.ToTitleCase(testLineage.lineageKey), character.Lineage.Name)
+		}
+
+		// Check lineage source
+		if character.Lineage.LineageSource != testLineage.expectedLineageSrc {
+			t.Errorf("Expected lineage source to be '%s', but got '%s'", testLineage.expectedLineageSrc, character.Lineage.LineageSource)
+		}
+
+		// Check chosen size
+		if character.ChosenSize != testLineage.expectedSize {
+			t.Errorf("Expected chosen size to be '%s', but got '%s'", testLineage.expectedSize, character.ChosenSize)
+		}
+
+		// Check predefined traits
+		if character.Lineage.Traits != nil {
+			for _, expectedValues := range testLineage.predefinedTraits {
+				assert.Equal(t, true, helpers.Contains(character.Lineage.Traits, expectedValues))
+			}
+		}
+
+		// Check chosen traits
+		for traitKey, expectedValue := range testLineage.selectedTraits {
+			actualValue, exists := character.ChosenTraits[traitKey]
+			if !exists {
+				t.Errorf("Expected chosen trait '%s' not found in character's traits", traitKey)
+			} else if actualValue != expectedValue {
+				t.Errorf("Expected chosen trait '%s' to be '%s', but got '%s'", traitKey, expectedValue, actualValue)
+			}
+		}
+	}
 }

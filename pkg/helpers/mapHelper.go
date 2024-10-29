@@ -22,3 +22,12 @@ func MapStringIntToString(src map[string]int) (tgt string) {
 	tgt = fmt.Sprintf("%s]", tgt)
 	return
 }
+
+// GetMapKeys returns a slice of keys for any map with comparable keys
+func GetMapKeys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}

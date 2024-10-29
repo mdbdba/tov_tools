@@ -3,10 +3,8 @@ package character
 import (
 	"bytes"
 	"fmt"
-	"math/rand"
 	"strings"
 	"text/tabwriter"
-	"time"
 )
 
 type Class struct {
@@ -25,21 +23,6 @@ func GetClass(name string) (Class, error) {
 		return Class{}, fmt.Errorf("class %s does not exist", name)
 	}
 	return class, nil
-}
-
-// RandomClass returns a randomly selected Class
-func RandomClass() Class {
-	seed := time.Now().UnixNano()
-	randomSource := rand.NewSource(seed)
-	randomGenerator := rand.New(randomSource)
-
-	rand.Seed(time.Now().UnixNano()) // Seed the random number generator
-	keys := make([]string, 0, len(Classes))
-	for key := range Classes {
-		keys = append(keys, key)
-	}
-	randomKey := keys[randomGenerator.Intn(len(keys))]
-	return Classes[randomKey]
 }
 
 // GetClassByName returns a Class by its name or an error if it doesn't exist
