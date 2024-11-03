@@ -73,7 +73,7 @@ func getRolls(sides int, timesToRoll int) (*[]int, error) {
 	return &rolls, nil
 }
 
-// Perform - controller that handles getting the result made.
+// Perform - Internal perform function to handle the core logic.
 // Options
 //
 //	[keep | drop] [highest | lowest] timesToRoll
