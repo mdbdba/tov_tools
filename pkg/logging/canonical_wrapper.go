@@ -3,6 +3,8 @@ package logging
 import (
 	"encoding/json"
 	"go.uber.org/zap"
+	"time"
+	"tov_tools/pkg/helpers"
 )
 
 var (
@@ -29,17 +31,60 @@ type LogData struct {
 	Message    map[string]interface{} `json:"message"`
 }
 
-// ToString converts the LogData struct to a JSON string
-func (logData *LogData) ToString() string {
-	jsonData, err := json.Marshal(logData)
+// PopulateLogMessage populates LogData's Message field with a struct and message string
+func PopulateLogMessage(structData interface{}, message string) map[string]interface{} {
+	logMessage := make(map[string]interface{})
+	logMessage["text"] = message
+
+	dataBytes, err := json.Marshal(structData)
 	if err != nil {
-		logger.Error("Failed to marshal log data to JSON", zap.Error(err))
-		return ""
+		logger.Error("Failed to marshal structData to JSON", zap.Error(err))
+		logMessage["data"] = "Failed to marshal structData"
+	} else {
+		var dataMap map[string]interface{}
+		err := json.Unmarshal(dataBytes, &dataMap)
+		if err != nil {
+			logger.Error("Failed to unmarshal structData to map", zap.Error(err))
+			logMessage["data"] = "Failed to unmarshal structData"
+		} else {
+			logMessage["data"] = dataMap
+		}
 	}
-	return string(jsonData)
+	return logMessage
 }
 
-// LogFunctionCall logs the details of a function call
-func LogFunctionCall(logData *LogData) {
-	logger.Info(logData.ToString())
+// New creates and populates a new LogData struct
+func New(unitOfWork string) *LogData {
+	startTime := time.Now()
+
+	requestID, _ := helpers.GenerateRandomString(13)
+
+	logData := &LogData{
+		Timestamp:  startTime.Format(time.RFC3339),
+		Canonical:  true,
+		UnitOfWork: unitOfWork,
+		RequestID:  requestID,
+	}
+	return logData
+}
+
+// LogUnitOfWork finalizes and logs the LogData
+func LogUnitOfWork(logData *LogData, structData interface{}, message string) {
+	startTime, err := time.Parse(time.RFC3339, logData.Timestamp)
+	if err != nil {
+		logger.Error("Failed to parse timestamp", zap.Error(err))
+		return
+	}
+	logData.DurationMs = time.Since(startTime).Milliseconds()
+	logData.Message = PopulateLogMessage(structData, message)
+	logData.Timestamp = time.Now().Format(time.RFC3339)
+
+	logger.Info("Perform operation completed",
+		zap.String("timestamp", logData.Timestamp),
+		zap.Bool("canonical", logData.Canonical),
+		zap.String("unitOfWork", logData.UnitOfWork),
+		zap.String("requestID", logData.RequestID),
+		zap.Int64("durationMs", logData.DurationMs),
+		zap.Any("message", logData.Message),
+	)
 }

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"tov_tools/pkg/helpers"
+	"tov_tools/pkg/logging"
 )
 
 // Roll struct containing everything you wanted to know about a roll
@@ -91,6 +92,7 @@ func getRolls(sides int, timesToRoll int) (*[]int, error) {
 //   - using the variadic function for the Options parameter will allow us
 //     to simplify all the different combinations by just evaluating them here.
 func Perform(sides int, timesToRoll int, CtxRef string, options ...string) (r *Roll, err error) {
+	canonical := logging.New("Dice.Roll.Perform")
 	var reqLogStr string // boil down all the Options to an easy-to-read string
 	var vantageLogStr string
 	var keepLogStr string
@@ -205,7 +207,7 @@ func Perform(sides int, timesToRoll int, CtxRef string, options ...string) (r *R
 	result += additiveValue
 	reqLogStr = fmt.Sprintf("%s%s%s", vantageLogStr, keepLogStr, additiveLogStr)
 
-	return &Roll{
+	RollObj := Roll{
 		Options:        reqLogStr,
 		Sides:          sides,
 		TimesToRoll:    timesToRoll,
@@ -214,5 +216,8 @@ func Perform(sides int, timesToRoll int, CtxRef string, options ...string) (r *R
 		AdditiveValue:  additiveValue,
 		Result:         result,
 		CtxRef:         CtxRef,
-	}, nil
+	}
+
+	logging.LogUnitOfWork(canonical, &RollObj, "Perform")
+	return &RollObj, nil
 }
