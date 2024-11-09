@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"tov_tools/pkg/helpers"
-	"tov_tools/pkg/logging"
 )
 
 // Roll struct containing everything you wanted to know about a roll
 type Roll struct {
+	ID             string
 	Options        string
 	Sides          int
 	TimesToRoll    int
@@ -46,9 +46,11 @@ func (r *Roll) ConvertToString(p bool) (s string) {
 	if p {
 		pStr = "\n\t"
 	}
-	s = fmt.Sprintf("ROLL -- %sSides: %d, %sTimesToRoll: %d, "+
+
+	s = fmt.Sprintf("ROLL -- %sID: %s, %sSides: %d, %sTimesToRoll: %d, "+
 		"%sOptions: [%s], %sAdditiveValue: %d, %sResult: %d, %sRollsUsed: %s, "+
 		"%sRollsGenerated: %s, %sCtxRef: %s\n",
+		pStr, r.ID,
 		pStr, r.Sides,
 		pStr, r.TimesToRoll,
 		pStr, strings.TrimSpace(r.Options),
@@ -92,7 +94,7 @@ func getRolls(sides int, timesToRoll int) (*[]int, error) {
 //   - using the variadic function for the Options parameter will allow us
 //     to simplify all the different combinations by just evaluating them here.
 func Perform(sides int, timesToRoll int, CtxRef string, options ...string) (r *Roll, err error) {
-	canonical := logging.New("Dice.Roll.Perform")
+	// canonical := logging.New("Dice.Roll.Perform")
 	var reqLogStr string // boil down all the Options to an easy-to-read string
 	var vantageLogStr string
 	var keepLogStr string
@@ -207,7 +209,12 @@ func Perform(sides int, timesToRoll int, CtxRef string, options ...string) (r *R
 	result += additiveValue
 	reqLogStr = fmt.Sprintf("%s%s%s", vantageLogStr, keepLogStr, additiveLogStr)
 
+	tmpID, err := helpers.GenerateRandomString(13)
+	if err != nil {
+		panic(err)
+	}
 	RollObj := Roll{
+		ID:             tmpID,
 		Options:        reqLogStr,
 		Sides:          sides,
 		TimesToRoll:    timesToRoll,
@@ -218,6 +225,6 @@ func Perform(sides int, timesToRoll int, CtxRef string, options ...string) (r *R
 		CtxRef:         CtxRef,
 	}
 
-	logging.LogUnitOfWork(canonical, &RollObj, "Perform")
+	// logging.LogUnitOfWork(canonical, &RollObj, "Perform")
 	return &RollObj, nil
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"go.uber.org/zap"
 	"time"
-	"tov_tools/pkg/helpers"
 )
 
 var (
@@ -57,13 +56,10 @@ func PopulateLogMessage(structData interface{}, message string) map[string]inter
 func New(unitOfWork string) *LogData {
 	startTime := time.Now()
 
-	requestID, _ := helpers.GenerateRandomString(13)
-
 	logData := &LogData{
 		Timestamp:  startTime.Format(time.RFC3339),
 		Canonical:  true,
 		UnitOfWork: unitOfWork,
-		RequestID:  requestID,
 	}
 	return logData
 }
@@ -83,7 +79,6 @@ func LogUnitOfWork(logData *LogData, structData interface{}, message string) {
 		zap.String("timestamp", logData.Timestamp),
 		zap.Bool("canonical", logData.Canonical),
 		zap.String("unitOfWork", logData.UnitOfWork),
-		zap.String("requestID", logData.RequestID),
 		zap.Int64("durationMs", logData.DurationMs),
 		zap.Any("message", logData.Message),
 	)
