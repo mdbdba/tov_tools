@@ -1,14 +1,19 @@
-package character
+package static_data
+
+type DamageModifierTable map[string]float32
 
 // DamageModifiers returns a map of names describing how susceptible
 // a character is to damage providing a name and modifier
 var DamageModifiers = func() map[string]float32 {
 	return map[string]float32{
 		"vulnerable": 2.0,
+		"normal":     1.0,
 		"resistant":  0.5,
 		"immune":     0.0,
 	}
 }
+
+type DamageTypeTable map[string]string
 
 // DamageType returns a map of names describing the different types
 // of damage allowed and a description of each
