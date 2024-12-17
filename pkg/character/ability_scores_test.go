@@ -136,13 +136,13 @@ func TestGetPreGeneratedAbilityArray(t *testing.T) {
 		AdditionalBonus, ctxRef, isMonsterOrGod)
 	// fmt.Println(a.ToPrettyString())
 	assert.Equal(t, 20, a.Values["str"])
-	assert.Equal(t, 15, a.Values["cha"])
+	assert.Equal(t, 13, a.Values["cha"])
 	assert.Equal(t, 19, a.Values["dex"])
-	assert.Equal(t, 16, a.Values["int"])
+	assert.Equal(t, 15, a.Values["int"])
 	actual, _ := a.GetModifier("str")
 	assert.Equal(t, 5, actual)
 	actual, _ = a.GetModifier("int")
-	assert.Equal(t, 3, actual)
+	assert.Equal(t, 2, actual)
 }
 
 func TestGetAbilityArray(t *testing.T) {
@@ -152,10 +152,6 @@ func TestGetAbilityArray(t *testing.T) {
 	rollingOption := "standard"
 	sortOrder := []string{"dex", "con", "str",
 		"cha", "wis", "int"}
-	ArchetypeBonus := AbilityArrayTemplate()
-	ArchetypeBonus["cha"] = 2
-	ArchetypeBonus["int"] = 1
-	ArchetypeBonusIgnored := true
 	LevelChangeIncrease := AbilityArrayTemplate()
 	LevelChangeIncrease["dex"] = 2
 	AdditionalBonus := AbilityArrayTemplate()
@@ -164,8 +160,8 @@ func TestGetAbilityArray(t *testing.T) {
 	isMonsterOrGod := true
 
 	// When
-	a, err := GetAbilityArray(rollingOption, sortOrder, ArchetypeBonus,
-		ArchetypeBonusIgnored, LevelChangeIncrease, AdditionalBonus,
+	a, err := GetAbilityArray(rollingOption, sortOrder,
+		LevelChangeIncrease, AdditionalBonus,
 		ctxRef, isMonsterOrGod, observedLoggerSugared)
 
 	// Then
@@ -199,23 +195,21 @@ func TestAdjustValues(t *testing.T) {
 	rollingOption := "standard"
 	sortOrder := []string{"dex", "con", "str",
 		"cha", "wis", "int"}
-	ArchetypeBonus := AbilityArrayTemplate()
-	ArchetypeBonusIgnored := false
 	LevelChangeIncrease := AbilityArrayTemplate()
 	AdditionalBonus := AbilityArrayTemplate()
 	ctxRef := "TestAdjustValues"
 	isMonsterOrGod := false
 
-	a, err := GetAbilityArray(rollingOption, sortOrder, ArchetypeBonus,
-		ArchetypeBonusIgnored, LevelChangeIncrease, AdditionalBonus,
+	a, err := GetAbilityArray(rollingOption, sortOrder,
+		LevelChangeIncrease, AdditionalBonus,
 		ctxRef, isMonsterOrGod, observedLoggerSugared)
 	assert.Equal(t, nil, err)
 	a.AdjustValues("ArchetypeBonus", "cha",
 		2, observedLoggerSugared)
 	a.AdjustValues("ArchetypeBonus", "int",
 		1, observedLoggerSugared)
-	assert.Equal(t, 14, a.Values["cha"])
-	assert.Equal(t, 9, a.Values["int"])
+	assert.Equal(t, 12, a.Values["cha"])
+	assert.Equal(t, 8, a.Values["int"])
 	a.AdjustValues("LevelChangeIncrease", "dex",
 		2, observedLoggerSugared)
 	assert.Equal(t, 17, a.Values["dex"])

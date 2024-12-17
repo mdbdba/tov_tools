@@ -257,8 +257,6 @@ func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 //	  RollingOption describes how the Raw values were generated
 //	  SortOrder is the order applied to the Raw values to make Base
 //	  Base is the base point for the Ability scores
-//	  ArchetypeBonus are values that reflect racial/archetypal bonuses
-//	  ArchetypeBonusIgnored if true don't include any of the racial/archetypal bonuses
 //	  LevelChangeIncrease are values added when levels achieved
 //	  AdditionalBonus any other values that influence ability values
 //	  Values are the summation of Base + ArchetypeBonus (if used) +
@@ -266,18 +264,16 @@ func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 //	  Modifiers are the modifiers based on Values
 //	  CtxRef is the context reference for the assignment
 type AbilityArray struct {
-	Raw                   []int          `json:"raw"`
-	RollingOption         string         `json:"rolling_option"`
-	SortOrder             []string       `json:"sort_order"`
-	Base                  map[string]int `json:"base"`
-	ArchetypeBonus        map[string]int `json:"archetype_bonus"`
-	ArchetypeBonusIgnored bool           `json:"archetype_bonus_ignored"`
-	LevelChangeIncrease   map[string]int `json:"level_change_increase"`
-	AdditionalBonus       map[string]int `json:"additional_bonus"`
-	Values                map[string]int `json:"values"`
-	Modifiers             map[string]int `json:"modifiers"`
-	CtxRef                string         `json:"ctx_ref"`
-	IsMonsterOrGod        bool           `json:"is_monster_or_god"`
+	Raw                 []int          `json:"raw"`
+	RollingOption       string         `json:"rolling_option"`
+	SortOrder           []string       `json:"sort_order"`
+	Base                map[string]int `json:"base"`
+	LevelChangeIncrease map[string]int `json:"level_change_increase"`
+	AdditionalBonus     map[string]int `json:"additional_bonus"`
+	Values              map[string]int `json:"values"`
+	Modifiers           map[string]int `json:"modifiers"`
+	CtxRef              string         `json:"ctx_ref"`
+	IsMonsterOrGod      bool           `json:"is_monster_or_god"`
 }
 
 func GetPreGeneratedAbilityArray(Raw []int, ArchetypeBonus map[string]int,
@@ -287,18 +283,16 @@ func GetPreGeneratedAbilityArray(Raw []int, ArchetypeBonus map[string]int,
 	values := AbilityArrayTemplate()
 	mods := AbilityArrayTemplate()
 	a := AbilityArray{
-		Raw:                   Raw,
-		RollingOption:         "pregenerated",
-		SortOrder:             sortOrder,
-		Base:                  b,
-		ArchetypeBonus:        ArchetypeBonus,
-		ArchetypeBonusIgnored: ArchetypeBonusIgnored,
-		LevelChangeIncrease:   LevelChangeIncrease,
-		AdditionalBonus:       AdditionalBonus,
-		Values:                values,
-		Modifiers:             mods,
-		CtxRef:                CtxRef,
-		IsMonsterOrGod:        IsMonsterOrGod,
+		Raw:                 Raw,
+		RollingOption:       "pregenerated",
+		SortOrder:           sortOrder,
+		Base:                b,
+		LevelChangeIncrease: LevelChangeIncrease,
+		AdditionalBonus:     AdditionalBonus,
+		Values:              values,
+		Modifiers:           mods,
+		CtxRef:              CtxRef,
+		IsMonsterOrGod:      IsMonsterOrGod,
 	}
 	a.setValuesAndModifiers()
 	return &a
@@ -309,19 +303,21 @@ func GetPreGeneratedAbilityArray(Raw []int, ArchetypeBonus map[string]int,
 // character and all the info to know how it was all put together. It returns a pointer
 // to an AbilityArray
 //
+// Racial/archetypal bonuses were removed, differing from D&D.
+//
 //	Parameters:
 //	 RollingOption describes how the Raw values were generated
 //	 SortOrder is the order applied to the Raw values
-//	 ArchetypeBonus are values that reflect racial/archetypal bonuses
-//	 ArchetypeBonusIgnored if true don't include any of the racial/archetypal bonuses
 //	 LevelChangeIncrease are values added when levels achieved
 //	 AdditionalBonus any other values that influence ability values
 //	 CtxRef is the context reference for the assignment. A freetext
 //	   string that you can use to keep track of it in the logs.
 func GetAbilityArray(RollingOption string,
-	SortOrder []string, ArchetypeBonus map[string]int,
-	ArchetypeBonusIgnored bool, LevelChangeIncrease map[string]int,
-	AdditionalBonus map[string]int, CtxRef string, IsMonsterOrGod bool,
+	SortOrder []string,
+	LevelChangeIncrease map[string]int,
+	AdditionalBonus map[string]int,
+	CtxRef string,
+	IsMonsterOrGod bool,
 	logger *zap.SugaredLogger) (*AbilityArray, error) {
 	b, raw, err := GetBaseAbilityArray(SortOrder, RollingOption, logger)
 	if err != nil {
@@ -330,18 +326,16 @@ func GetAbilityArray(RollingOption string,
 	values := AbilityArrayTemplate()
 	mods := AbilityArrayTemplate()
 	a := AbilityArray{
-		Raw:                   raw,
-		RollingOption:         RollingOption,
-		SortOrder:             SortOrder,
-		Base:                  b,
-		ArchetypeBonus:        ArchetypeBonus,
-		ArchetypeBonusIgnored: ArchetypeBonusIgnored,
-		LevelChangeIncrease:   LevelChangeIncrease,
-		AdditionalBonus:       AdditionalBonus,
-		Values:                values,
-		Modifiers:             mods,
-		CtxRef:                CtxRef,
-		IsMonsterOrGod:        IsMonsterOrGod,
+		Raw:                 raw,
+		RollingOption:       RollingOption,
+		SortOrder:           SortOrder,
+		Base:                b,
+		LevelChangeIncrease: LevelChangeIncrease,
+		AdditionalBonus:     AdditionalBonus,
+		Values:              values,
+		Modifiers:           mods,
+		CtxRef:              CtxRef,
+		IsMonsterOrGod:      IsMonsterOrGod,
 	}
 	a.setValuesAndModifiers()
 	logger.Infow("GetAbilityArray", zap.Object("AbilityArray", &a))
@@ -353,8 +347,6 @@ func (pa *AbilityArray) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	enc.AddString("RollingOption", pa.RollingOption)
 	enc.AddString("SortOrder", helpers.StringSliceToString(pa.SortOrder))
 	enc.AddString("Base", AbilityMapToString(pa.Base))
-	enc.AddString("ArchetypeBonus", AbilityMapToString(pa.ArchetypeBonus))
-	enc.AddBool("ArchetypeBonusIgnored", pa.ArchetypeBonusIgnored)
 	enc.AddString("LevelChangeIncrease", AbilityMapToString(pa.LevelChangeIncrease))
 	enc.AddString("AdditionalBonus", AbilityMapToString(pa.AdditionalBonus))
 	enc.AddString("Values", AbilityMapToString(pa.Values))
@@ -402,11 +394,8 @@ func (pa *AbilityArray) setValuesAndModifiers() {
 		maxVal = 30 // Gods and Monsters can have ability scores up to 30
 	}
 	for k := range pa.Base {
-		atb := pa.ArchetypeBonus[k]
-		if pa.ArchetypeBonusIgnored {
-			atb = 0
-		}
-		tVal := pa.Base[k] + atb + pa.LevelChangeIncrease[k] +
+
+		tVal := pa.Base[k] + pa.LevelChangeIncrease[k] +
 			pa.AdditionalBonus[k]
 		// Values cannot exceed 20 or 30. Set that as max.
 		if tVal > maxVal {
@@ -438,8 +427,6 @@ func ValidateAbilityName(ability string) bool {
 func (pa *AbilityArray) AdjustValues(ValueType string, Ability string,
 	ChangeValue int, logger *zap.SugaredLogger) {
 	switch ValueType {
-	case "ArchetypeBonus":
-		pa.ArchetypeBonus[Ability] += ChangeValue
 	case "LevelChangeIncrease":
 		pa.LevelChangeIncrease[Ability] += ChangeValue
 	case "AdditionalBonus":
@@ -465,22 +452,21 @@ func (pa *AbilityArray) ConvertToString(p bool) (s string) {
 	rawStr := helpers.IntSliceToString(pa.Raw)
 	orderStr := helpers.StringSliceToString(pa.SortOrder)
 	baseStr := AbilityMapToString(pa.Base)
-	archStr := AbilityMapToString(pa.ArchetypeBonus)
 	lvlStr := AbilityMapToString(pa.LevelChangeIncrease)
 	addbStr := AbilityMapToString(pa.AdditionalBonus)
 	valStr := AbilityMapToString(pa.Values)
 	modStr := AbilityMapToString(pa.Modifiers)
 	pStr := ""
 	f := "AbilityArray -- %sRaw: %s, %sRollingOption: %s, " +
-		"%sSortOrder: %s, %sBaseArray: %s, %sArchetypeBonus: %s, " +
-		"%sArchetypeBonusIgnored: %v, %sLevelChangeIncreases: %s, " +
+		"%sSortOrder: %s, %sBaseArray: %s, " +
+		"%sLevelChangeIncreases: %s, " +
 		"%sAdditionalBonus: %s, %sValues: %s, %sModifiers: %s, %sCtxRef: %s, " +
 		"%sIsMonsterOrGod: %v\n"
 	if p {
 		pStr = "\n\t"
 		f = "AbilityArray -- %sRaw:                   %s, %sRollingOption:         %s, " +
-			"%sSortOrder: %91s, %sBaseArray: %115s, %sArchetypeBonus: %110s, " +
-			"%sArchetypeBonusIgnored: %v, %sLevelChangeIncreases:  %s, " +
+			"%sSortOrder: %91s, %sBaseArray: %115s, " +
+			"%sLevelChangeIncreases:  %s, " +
 			"%sAdditionalBonus: %109s, %sValues: %118s, %sModifiers: %115s, " +
 			"%sCtxRef:                %s, %sIsMonsterOrGod:        %v\n"
 	}
@@ -489,8 +475,6 @@ func (pa *AbilityArray) ConvertToString(p bool) (s string) {
 		pStr, pa.RollingOption,
 		pStr, orderStr,
 		pStr, baseStr,
-		pStr, archStr,
-		pStr, pa.ArchetypeBonusIgnored,
 		pStr, lvlStr,
 		pStr, addbStr,
 		pStr, valStr,

@@ -8,12 +8,13 @@ import (
 )
 
 type Class struct {
-	Name                   string
-	Description            string
-	HitDie                 string
-	KeyAbilities           [][]string
-	SaveProficiencies      []string
-	EquipmentProficiencies []string
+	Name                        string
+	AbilityScoreOrderPreference []string
+	Description                 string
+	HitDie                      string
+	KeyAbilities                [][]string
+	SaveProficiencies           []string
+	EquipmentProficiencies      []string
 }
 
 // GetClass retrieves the Class for a given name
@@ -38,10 +39,11 @@ func GetClassByName(name string) (Class, error) {
 // ToString formats a single Class as a string
 func (c *Class) ToString() string {
 	return fmt.Sprintf(
-		"Name: %s\nDescription: %s\nHit Die: %s\nKey Abilities: %s\nSave Proficiencies: %s\nEquipment Proficiencies: %s\n",
+		"Name: %s\nDescription: %s\nHit Die: %s\nPreferred Ability Score Order: %s\nKey Abilities: %s\nSave Proficiencies: %s\nEquipment Proficiencies: %s\n",
 		c.Name,
 		c.Description,
 		c.HitDie,
+		c.AbilityScoreOrderPreference,
 		formatKeyAbilities(c.KeyAbilities),
 		strings.Join(c.SaveProficiencies, ", "),
 		strings.Join(c.EquipmentProficiencies, ", "),
@@ -57,10 +59,11 @@ func ToStringTable() string {
 		return ""
 	}
 	for _, class := range Classes {
-		_, err = fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\n",
+		_, err = fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 			class.Name,
 			class.Description,
 			class.HitDie,
+			class.AbilityScoreOrderPreference,
 			formatKeyAbilities(class.KeyAbilities),
 			strings.Join(class.SaveProficiencies, ", "),
 			strings.Join(class.EquipmentProficiencies, ", "))
