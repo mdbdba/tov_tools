@@ -49,8 +49,9 @@ func NewCharacter(
 	// TODO: Implement these
 	LevelChangeIncrease := AbilityArrayTemplate()
 	AdditionalBonus := AbilityArrayTemplate()
+	AbilityScoreOrderPreference := useClass.ClassBuildTypes["Standard"].AbilityScoreOrderPreference
 
-	a, err := GetAbilityArray(rollingOption, useClass.AbilityScoreOrderPreference, LevelChangeIncrease,
+	a, err := GetAbilityArray(rollingOption, AbilityScoreOrderPreference, LevelChangeIncrease,
 		AdditionalBonus, ctxRef, false, logger)
 
 	if err != nil {

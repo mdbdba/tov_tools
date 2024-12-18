@@ -5,16 +5,21 @@ import (
 	"fmt"
 	"strings"
 	"text/tabwriter"
+	"tov_tools/pkg/helpers"
 )
 
-type Class struct {
-	Name                        string
+type ClassBuildType struct {
+	KeyAbilities                []string
 	AbilityScoreOrderPreference []string
-	Description                 string
-	HitDie                      string
-	KeyAbilities                [][]string
-	SaveProficiencies           []string
-	EquipmentProficiencies      []string
+}
+
+type Class struct {
+	Name                   string
+	ClassBuildTypes        map[string]ClassBuildType
+	Description            string
+	HitDie                 string
+	SaveProficiencies      []string
+	EquipmentProficiencies []string
 }
 
 // GetClass retrieves the Class for a given name
@@ -38,13 +43,21 @@ func GetClassByName(name string) (Class, error) {
 
 // ToString formats a single Class as a string
 func (c *Class) ToString() string {
+	buildTypeString := "}"
+	for buildName, buildType := range c.ClassBuildTypes {
+		buildTypeString += fmt.Sprintf(
+			"{ Build Type: %s Key Abilities: %s Ability Scoare Order Preference: %s } ",
+			buildName,
+			helpers.StringSliceToString(buildType.KeyAbilities),
+			helpers.StringSliceToString(buildType.AbilityScoreOrderPreference))
+	}
+	buildTypeString += "}"
 	return fmt.Sprintf(
-		"Name: %s\nDescription: %s\nHit Die: %s\nPreferred Ability Score Order: %s\nKey Abilities: %s\nSave Proficiencies: %s\nEquipment Proficiencies: %s\n",
+		"Name: %s\nDescription: %s\nHit Die: %s\nBuild Types: %s\nSave Proficiencies: %s\nEquipment Proficiencies: %s\n",
 		c.Name,
 		c.Description,
 		c.HitDie,
-		c.AbilityScoreOrderPreference,
-		formatKeyAbilities(c.KeyAbilities),
+		buildTypeString,
 		strings.Join(c.SaveProficiencies, ", "),
 		strings.Join(c.EquipmentProficiencies, ", "),
 	)
@@ -59,12 +72,23 @@ func ToStringTable() string {
 		return ""
 	}
 	for _, class := range Classes {
+		abilityScoreOrderPreferenceString := ""
+		keyAbilitiesString := ""
+		for buildName, buildType := range class.ClassBuildTypes {
+			abilityScoreOrderPreferenceString +=
+				fmt.Sprintf("{%s: %s} ", buildName,
+					helpers.StringSliceToString(buildType.AbilityScoreOrderPreference))
+			keyAbilitiesString +=
+				fmt.Sprintf("{%s: %s} ", buildName,
+					helpers.StringSliceToString(buildType.KeyAbilities))
+		}
+
 		_, err = fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
 			class.Name,
 			class.Description,
 			class.HitDie,
-			class.AbilityScoreOrderPreference,
-			formatKeyAbilities(class.KeyAbilities),
+			abilityScoreOrderPreferenceString,
+			keyAbilitiesString,
 			strings.Join(class.SaveProficiencies, ", "),
 			strings.Join(class.EquipmentProficiencies, ", "))
 		if err != nil {
