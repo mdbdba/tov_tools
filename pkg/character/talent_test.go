@@ -87,3 +87,58 @@ func TestFlatBonusTalent(t *testing.T) {
 		t.Errorf("Expected Strength score to be %d, but got %d", expectedScore, strengthScore)
 	}
 }
+
+func TestSpellSwapTalent(t *testing.T) {
+	// Create a test talent that swaps Firebolt for Ray of Frost
+	talentVersatileSpellcaster := Talent{
+		Name:        "Versatile Spellcaster",
+		Description: "Swap the spell 'Firebolt' with 'Ray of Frost'.",
+		Prerequisite: func(c *Character) bool {
+			// Prerequisite: Wizard class, level >= 5
+			return c.CharacterClass == "Wizard" && c.Level >= 5
+		},
+		Benefits: []Benefit{
+			&SpellSwapBenefit{
+				OldSpell: "Firebolt",
+				NewSpell: "Ray of Frost",
+			},
+		},
+	}
+
+	// Given
+	observedZapCore, _ := observer.New(zap.InfoLevel)
+	observedLoggerSugared := zap.New(observedZapCore).Sugar()
+	rollingOption := "common"
+	// Create a test character
+	testCharacter := NewCharacter(
+		"Test Wizard", 5, "Wizard", Lineage{}, Heritage{}, "medium", rollingOption,
+		map[string]string{}, "Standard", "Character talent test", observedLoggerSugared)
+
+	testCharacter.SpellBook = []string{"Firebolt", "Mage Armor"}
+
+	// Add the talent to the character
+	err := testCharacter.AddTalent(talentVersatileSpellcaster)
+	if err != nil {
+		t.Fatalf("failed to add talent: %v", err)
+	}
+
+	// Verify that Firebolt is replaced with Ray of Frost
+	foundNewSpell := false
+	foundOldSpell := false
+	for _, spell := range testCharacter.SpellBook {
+		if spell == "Ray of Frost" {
+			foundNewSpell = true
+		}
+		if spell == "Firebolt" {
+			foundOldSpell = true
+		}
+	}
+
+	if !foundNewSpell {
+		t.Errorf("Expected 'Ray of Frost' to be in the character's spellbook, but it was not found")
+	}
+
+	if foundOldSpell {
+		t.Errorf("Expected 'Firebolt' to be removed from the character's spellbook, but it is still present")
+	}
+}

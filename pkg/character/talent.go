@@ -51,15 +51,25 @@ type SpellSwapBenefit struct {
 	NewSpell string
 }
 
-/*
 func (b *SpellSwapBenefit) Apply(c *Character) error {
-	// Logic to replace a spell (requires a Spellbook or equivalent structure in Character)
-	if err := c.SwapSpell(b.OldSpell, b.NewSpell); err != nil {
-		return err
+	// Ensure the character knows the old spell
+	found := false
+	for i, spell := range c.SpellBook {
+		if spell == b.OldSpell {
+			// Swap the spell
+			c.SpellBook[i] = b.NewSpell
+			found = true
+			break
+		}
 	}
+
+	if !found {
+		return fmt.Errorf("character does not know the spell '%s'", b.OldSpell)
+	}
+
+	// The character now has the new spell
 	return nil
 }
-*/
 
 func (b *SpellSwapBenefit) Description() string {
 	return fmt.Sprintf("Replace one spell you know (%s) with a new spell (%s)", b.OldSpell, b.NewSpell)

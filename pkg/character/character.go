@@ -20,6 +20,7 @@ type Character struct {
 	RollingOption  string
 	HitPoints      int
 	Talents        map[string]Talent
+	SpellBook      []string
 }
 
 func (c *Character) AddTalent(t Talent) error {
@@ -52,7 +53,6 @@ func (c *Character) AddSkillBonusMultiplier(skillName string, multiplier float64
 func (c *Character) AddAbilityBonus(ability string, bonus int) {
 	c.Abilities.AdditionalBonus[ability] += bonus
 	c.Abilities.setValuesAndModifiers()
-
 }
 
 // NewCharacter Method to create a new character with default properties
@@ -100,10 +100,12 @@ func NewCharacter(
 	}
 
 	AbilityScoreOrderPreference := useClass.ClassBuildTypes[classBuildType].AbilityScoreOrderPreference
-
-	// TODO: Implement these
-	LevelChangeIncrease := AbilityArrayTemplate()
 	AdditionalBonus := AbilityArrayTemplate()
+
+	// TODO: Implement this
+	LevelChangeIncrease := AbilityArrayTemplate()
+
+	// It would be a good idea to walk the Talents slice for changes to the ability bonuses before getting the account
 
 	a, err := GetAbilityArray(rollingOption, AbilityScoreOrderPreference, LevelChangeIncrease,
 		AdditionalBonus, ctxRef, false, logger)
