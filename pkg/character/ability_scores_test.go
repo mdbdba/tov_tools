@@ -124,15 +124,13 @@ func TestGetPreGeneratedAbilityArray(t *testing.T) {
 	ArchetypeBonus := AbilityArrayTemplate()
 	ArchetypeBonus["cha"] = 2
 	ArchetypeBonus["int"] = 1
-	ArchetypeBonusIgnored := false
 	LevelChangeIncrease := AbilityArrayTemplate()
 	LevelChangeIncrease["dex"] = 2
 	AdditionalBonus := AbilityArrayTemplate()
 	AdditionalBonus["str"] = 2
 	ctxRef := "TestGetPreGeneratedAbilityArray"
 	isMonsterOrGod := false
-	a := GetPreGeneratedAbilityArray(Raw, ArchetypeBonus,
-		ArchetypeBonusIgnored, LevelChangeIncrease,
+	a := GetPreGeneratedAbilityArray(Raw, LevelChangeIncrease,
 		AdditionalBonus, ctxRef, isMonsterOrGod)
 	// fmt.Println(a.ToPrettyString())
 	assert.Equal(t, 20, a.Values["str"])

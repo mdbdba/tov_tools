@@ -7,7 +7,7 @@ import (
 
 func TestDamageModifiers(t *testing.T) {
 	actual := DamageModifiers()
-	assert.Equal(t, 3, len(actual))
+	assert.Equal(t, 4, len(actual))
 	assert.Equal(t, float32(2), actual["vulnerable"])
 }
 

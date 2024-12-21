@@ -14,8 +14,45 @@ type Character struct {
 	Heritage       Heritage
 	ChosenSize     string
 	ChosenTraits   map[string]string
+	BaseSkills     map[string]int
+	BaseSkillBonus map[string]int
 	Abilities      AbilityArray
 	RollingOption  string
+	HitPoints      int
+	Talents        map[string]Talent
+}
+
+func (c *Character) AddTalent(t Talent) error {
+	// Check prerequisite
+	if !t.Prerequisite(c) {
+		return fmt.Errorf("character does not meet the prerequisites for talent: %s", t.Name)
+	}
+	// Apply all benefits of the Talent
+	for _, benefit := range t.Benefits {
+		if err := benefit.Apply(c); err != nil {
+			return fmt.Errorf("failed to apply benefit '%s': %v", benefit.Description(), err)
+		}
+	}
+	c.Talents[t.Name] = t
+	return nil
+}
+
+func (c *Character) GetBaseProficiencyBonus() float64 {
+	return float64(c.Level/4 + 2)
+}
+
+func (c *Character) GetAbility(ability string) int {
+	return c.Abilities.Values[ability]
+}
+
+func (c *Character) AddSkillBonusMultiplier(skillName string, multiplier float64) {
+	c.BaseSkillBonus[skillName] += int(c.GetBaseProficiencyBonus() * multiplier)
+}
+
+func (c *Character) AddAbilityBonus(ability string, bonus int) {
+	c.Abilities.AdditionalBonus[ability] += bonus
+	c.Abilities.setValuesAndModifiers()
+
 }
 
 // NewCharacter Method to create a new character with default properties
@@ -28,6 +65,7 @@ func NewCharacter(
 	chosenSize string,
 	rollingOption string,
 	chosenTraits map[string]string,
+	classBuildType string,
 	ctxRef string,
 	logger *zap.SugaredLogger) *Character {
 
@@ -46,10 +84,26 @@ func NewCharacter(
 		useClass = RandomClass()
 	}
 
+	if classBuildType != "" {
+		if !ValidateClassBuildType(classBuildType, useClass.ClassBuildTypes) {
+			fmt.Printf("Class build type '%s' is invalid. Using Random Selection\n", classBuildType)
+			classBuildType = RandomClassBuildType(useClass.ClassBuildTypes)
+		}
+	} else {
+		if len(useClass.ClassBuildTypes) == 1 {
+			fmt.Println("No class build type specified. Using Standard selection instead.")
+			classBuildType = "Standard"
+		} else {
+			fmt.Println("No class build type specified. Using random selection instead.")
+			classBuildType = RandomClassBuildType(useClass.ClassBuildTypes)
+		}
+	}
+
+	AbilityScoreOrderPreference := useClass.ClassBuildTypes[classBuildType].AbilityScoreOrderPreference
+
 	// TODO: Implement these
 	LevelChangeIncrease := AbilityArrayTemplate()
 	AdditionalBonus := AbilityArrayTemplate()
-	AbilityScoreOrderPreference := useClass.ClassBuildTypes["Standard"].AbilityScoreOrderPreference
 
 	a, err := GetAbilityArray(rollingOption, AbilityScoreOrderPreference, LevelChangeIncrease,
 		AdditionalBonus, ctxRef, false, logger)
@@ -67,6 +121,7 @@ func NewCharacter(
 		ChosenSize:     chosenSize,
 		ChosenTraits:   chosenTraits,
 		Abilities:      *a,
+		Talents:        map[string]Talent{},
 	}
 	return character
 }

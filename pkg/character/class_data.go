@@ -113,7 +113,7 @@ var Classes = map[string]Class{
 		HitDie:      "d8",
 		ClassBuildTypes: map[string]ClassBuildType{
 			"Standard": {
-				AbilityScoreOrderPreference: []string{"dex", "wis", "con", "str", "int", "cha"},
+				AbilityScoreOrderPreference: []string{"str", "dex", "wis", "con", "int", "cha"},
 				KeyAbilities:                []string{"dex", "wis"},
 			},
 		},

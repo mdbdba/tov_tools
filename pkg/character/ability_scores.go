@@ -206,7 +206,7 @@ func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 	switch rollingOption {
 	case "common":
 		rawValueSlice, err = rollRawAbilitySlice(rollingOption, logger)
-		fmt.Println(rawValueSlice)
+		// fmt.Println(rawValueSlice)
 		if err != nil {
 			return
 		}
@@ -276,8 +276,7 @@ type AbilityArray struct {
 	IsMonsterOrGod      bool           `json:"is_monster_or_god"`
 }
 
-func GetPreGeneratedAbilityArray(Raw []int, ArchetypeBonus map[string]int,
-	ArchetypeBonusIgnored bool, LevelChangeIncrease map[string]int,
+func GetPreGeneratedAbilityArray(Raw []int, LevelChangeIncrease map[string]int,
 	AdditionalBonus map[string]int, CtxRef string, IsMonsterOrGod bool) *AbilityArray {
 	b, sortOrder := GetPreGeneratedBaseAbilityArray(Raw)
 	values := AbilityArrayTemplate()
