@@ -1,6 +1,8 @@
 package character
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Benefit interface {
 	Apply(c *Character) error // Applies the benefit to the character
@@ -9,9 +11,12 @@ type Benefit interface {
 
 type Talent struct {
 	Name         string                  // The name of the talent
+	Category     string                  // magic, martial, or technical
 	Description  string                  // A description of what the talent represents or does
 	Prerequisite func(c *Character) bool // A function to check if a character meets the prerequisite
 	Benefits     []Benefit               // A list of benefits provided by the talent
+	// Source       string                  // What granted this talent, was it a specific background or a human getting
+	// an extra talent, etc.
 }
 
 type SkillBonusMultiplierBenefit struct {
@@ -30,6 +35,9 @@ func (b *SkillBonusMultiplierBenefit) Apply(c *Character) error {
 func (b *SkillBonusMultiplierBenefit) Description() string {
 	return fmt.Sprintf("Increase your proficiency bonus for any ability check that uses the %s skill by %f times", b.SkillName, b.BonusMultiplier)
 }
+func (b *SkillBonusMultiplierBenefit) Label() string {
+	return fmt.Sprintf("SkillBonusMultiplier")
+}
 
 type FlatBonusBenefit struct {
 	Attribute string // e.g., "strength" or "dexterity"
@@ -38,12 +46,15 @@ type FlatBonusBenefit struct {
 
 func (b *FlatBonusBenefit) Apply(c *Character) error {
 	// Logic to add the bonus to the character's attribute
-	c.AddAbilityBonus(b.Attribute, b.Bonus)
+	c.AddAbilityBonus(b.Attribute, b.Label(), b.Bonus)
 	return nil
 }
 
 func (b *FlatBonusBenefit) Description() string {
 	return fmt.Sprintf("Gain a +%d bonus to %s", b.Bonus, b.Attribute)
+}
+func (b *FlatBonusBenefit) Label() string {
+	return fmt.Sprintf("FlatBonusBenefit")
 }
 
 type SpellSwapBenefit struct {

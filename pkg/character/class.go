@@ -13,6 +13,34 @@ type ClassBuildType struct {
 	AbilityScoreOrderPreference []string
 }
 
+type Subclass struct {
+	Name                string
+	Description         string
+	SpellcastingAbility SpellcastingAbilityType // Optional: Exists only if the subclass grants it
+}
+
+// SpellcastingAbilityType defines a custom type for allowed spellcasting abilities
+type SpellcastingAbilityType string
+
+// Allowed spellcasting ability values
+const (
+	Str SpellcastingAbilityType = "str"
+	Dex SpellcastingAbilityType = "dex"
+	Con SpellcastingAbilityType = "con"
+	Int SpellcastingAbilityType = "int"
+	Wis SpellcastingAbilityType = "wis"
+	Cha SpellcastingAbilityType = "cha"
+)
+
+// IsValid checks if a value is a valid SpellcastingAbilityType
+func (s SpellcastingAbilityType) IsValid() bool {
+	switch s {
+	case Str, Dex, Con, Int, Wis, Cha:
+		return true
+	}
+	return false
+}
+
 type Class struct {
 	Name                   string
 	ClassBuildTypes        map[string]ClassBuildType
@@ -20,6 +48,27 @@ type Class struct {
 	HitDie                 string
 	SaveProficiencies      []string
 	EquipmentProficiencies []string
+	SpellcastingAbility    SpellcastingAbilityType
+	Subclasses             map[string]Subclass
+}
+
+// SetSpellcastingAbility sets the SpellcastingAbility for the Class, with validation
+func (c *Class) SetSpellcastingAbility(value string) error {
+	ability := SpellcastingAbilityType(value)
+	if !ability.IsValid() {
+		return fmt.Errorf("invalid SpellcastingAbility: %s", value)
+	}
+	c.SpellcastingAbility = ability
+	return nil
+}
+
+func (c *Class) GetSubclass(name string) (Subclass, error) {
+	subclass, exists := c.Subclasses[name]
+	if !exists {
+		return Subclass{},
+			fmt.Errorf("subclass '%s' does not exist for class '%s'", name, c.Name)
+	}
+	return subclass, nil
 }
 
 // GetClass retrieves the Class for a given name

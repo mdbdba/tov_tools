@@ -2,7 +2,10 @@ package character
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 	"testing"
 	"tov_tools/pkg/helpers"
 )
@@ -148,6 +151,104 @@ func TestCharacterCreation(t *testing.T) {
 			} else if actualValue != expectedValue {
 				t.Errorf("Expected chosen trait '%s' to be '%s', but got '%s'", traitKey, expectedValue, actualValue)
 			}
+		}
+	}
+}
+
+func TestSetAbilitySkills(t *testing.T) {
+	// Given
+	observedZapCore, _ := observer.New(zap.InfoLevel)
+	observedLoggerSugared := zap.New(observedZapCore).Sugar()
+	rollingOption := "common"
+	// Create a test character
+	testCharacter := NewCharacter(
+		"Test Wizard", 5, "Wizard", "battle mage", Lineage{},
+		Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"Standard", "Character talent test", observedLoggerSugared)
+
+	testCharacter.AbilityProficiencies = []AbilitySkillProficiency{
+		{Skill: "athletics", Source: "Training"},
+	}
+	testCharacter.AbilityBonus = map[string]map[string]AbilitySkillBonus{
+		"athletics": {
+			"Training": {
+				Bonus:  1,
+				Source: "Training",
+			},
+			"Magic Belt": {
+				Bonus:  1,
+				Source: "Magic Belt",
+			},
+		},
+		"acrobatics": {
+			"Training": {
+				Bonus:  2,
+				Source: "Training",
+			},
+		},
+	}
+
+	// Run the function
+	testCharacter.SetAbilitySkills()
+
+	// testCharacter.PrintDetails()
+	// Define test cases
+	tests := []struct {
+		Skill              string
+		ExpectedValue      int
+		ExpectedProficient bool
+	}{
+		{
+			Skill:              "athletics",
+			ExpectedValue:      testCharacter.Abilities.Modifiers["str"] + 5, //(strength mod) + 3 (proficiency) + 1 + 1 (bonuses)
+			ExpectedProficient: true,
+		},
+		{
+			Skill:              "acrobatics",
+			ExpectedValue:      testCharacter.Abilities.Modifiers["dex"] + 2, //  (dex mod) + 2 (bonuses from training [non-proficient])
+			ExpectedProficient: false,
+		},
+		{
+			Skill:              "history",
+			ExpectedValue:      testCharacter.Abilities.Modifiers["int"], // (intelligence mod, no proficiency, no bonuses)
+			ExpectedProficient: false,
+		},
+	}
+
+	// Validate results
+	for _, test := range tests {
+		abilitySkill, exists := testCharacter.AbilitySkills[test.Skill]
+		if !exists {
+			t.Errorf("Skill %s not found in AbilitySkills", test.Skill)
+			continue
+		}
+		bonusStr := ""
+		separator := ""
+		for i := range testCharacter.AbilityBonus[test.Skill] {
+			bonusStr += spew.Sprintf("%s%d", separator, testCharacter.AbilityBonus[test.Skill][i].Bonus)
+			if separator == "" {
+				separator = " + "
+			}
+		}
+
+		pbStr := ""
+		for _, p := range testCharacter.AbilityProficiencies {
+			if p.Skill == test.Skill {
+				pbStr = fmt.Sprintf(" + pb: %d", testCharacter.GetBaseProficiencyBonus())
+			}
+			break
+		}
+
+		if abilitySkill.Value != test.ExpectedValue {
+			t.Errorf("Skill %s [%s]: expected value %d, got %d = skill mod: %d%s + bonuses: %s",
+				test.Skill, abilitySkill.Ability, test.ExpectedValue, abilitySkill.Value,
+				testCharacter.Abilities.Modifiers[abilitySkill.Ability],
+				pbStr,
+				bonusStr)
+		}
+
+		if abilitySkill.Proficient != test.ExpectedProficient {
+			t.Errorf("Skill %s: expected proficient %v, got %v", test.Skill, test.ExpectedProficient, abilitySkill.Proficient)
 		}
 	}
 }

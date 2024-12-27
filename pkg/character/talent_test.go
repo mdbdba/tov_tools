@@ -10,6 +10,7 @@ func TestSkillBonusTalent(t *testing.T) {
 	// Define a talent that doubles the proficiency bonus for the Arcana skill
 	talentArcaneMind := Talent{
 		Name:        "Arcane Mind",
+		Category:    "magic",
 		Description: "Double your proficiency bonus for any ability check that uses the Arcana skill.",
 		Prerequisite: func(c *Character) bool {
 			return c.Level >= 3 // Requires Level 3+
@@ -29,8 +30,9 @@ func TestSkillBonusTalent(t *testing.T) {
 	rollingOption := "common"
 	// Create a test character
 	testCharacter := NewCharacter(
-		"Test Mage", 3, "Wizard", Lineage{}, Heritage{}, "medium", rollingOption,
-		map[string]string{}, "Standard", "Character talent test", observedLoggerSugared)
+		"Test Mage", 3, "Wizard", "battle mage",
+		Lineage{}, Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"Standard", "Character talent test", observedLoggerSugared)
 
 	testCharacter.BaseSkillBonus = map[string]int{"Arcana": 0}
 
@@ -53,6 +55,7 @@ func TestSkillBonusTalent(t *testing.T) {
 func TestFlatBonusTalent(t *testing.T) {
 	talentStrongArm := Talent{
 		Name:        "Strong Arm",
+		Category:    "martial",
 		Description: "Gain a +2 bonus to Strength.",
 		Prerequisite: func(c *Character) bool {
 			return c.Level >= 1 // No significant restrictions
@@ -70,8 +73,9 @@ func TestFlatBonusTalent(t *testing.T) {
 	rollingOption := "common"
 	// Create a test character
 	testCharacter := NewCharacter(
-		"Test Fighter", 1, "Fighter", Lineage{}, Heritage{}, "medium", rollingOption,
-		map[string]string{}, "Standard", "Character talent test", observedLoggerSugared)
+		"Test Fighter", 1, "Fighter", "weapon master",
+		Lineage{}, Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"Standard", "Character talent test", observedLoggerSugared)
 
 	// Add the talent to the character
 	err := testCharacter.AddTalent(talentStrongArm)
@@ -92,6 +96,7 @@ func TestSpellSwapTalent(t *testing.T) {
 	// Create a test talent that swaps Firebolt for Ray of Frost
 	talentVersatileSpellcaster := Talent{
 		Name:        "Versatile Spellcaster",
+		Category:    "magic",
 		Description: "Swap the spell 'Firebolt' with 'Ray of Frost'.",
 		Prerequisite: func(c *Character) bool {
 			// Prerequisite: Wizard class, level >= 5
@@ -111,8 +116,9 @@ func TestSpellSwapTalent(t *testing.T) {
 	rollingOption := "common"
 	// Create a test character
 	testCharacter := NewCharacter(
-		"Test Wizard", 5, "Wizard", Lineage{}, Heritage{}, "medium", rollingOption,
-		map[string]string{}, "Standard", "Character talent test", observedLoggerSugared)
+		"Test Wizard", 5, "Wizard", "battle mage",
+		Lineage{}, Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"Standard", "Character talent test", observedLoggerSugared)
 
 	testCharacter.SpellBook = []string{"Firebolt", "Mage Armor"}
 

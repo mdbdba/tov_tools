@@ -18,6 +18,16 @@ var Classes = map[string]Class{
 			"shields",
 			"weapons",
 		},
+		Subclasses: map[string]Subclass{
+			"berserker": {
+				Name:        "Berserker",
+				Description: "",
+			},
+			"wild fury": {
+				Name:        "Wild Fury",
+				Description: "",
+			},
+		},
 	},
 	"bard": {
 		Name:        "Bard",
@@ -34,6 +44,17 @@ var Classes = map[string]Class{
 			"light armor",
 			"simple weapons",
 			"finesse weapons",
+		},
+		SpellcastingAbility: Cha,
+		Subclasses: map[string]Subclass{
+			"lore": {
+				Name:        "Lore",
+				Description: "",
+			},
+			"victory": {
+				Name:        "Victory",
+				Description: "",
+			},
 		},
 	},
 	"cleric": {
@@ -52,6 +73,21 @@ var Classes = map[string]Class{
 			"medium armor",
 			"shields",
 			"simple weapons"},
+		SpellcastingAbility: Wis,
+		Subclasses: map[string]Subclass{
+			"life domain": {
+				Name:        "Life Domain",
+				Description: "",
+			},
+			"light domain": {
+				Name:        "Light Domain",
+				Description: "",
+			},
+			"war domain": {
+				Name:        "War Domain",
+				Description: "",
+			},
+		},
 	},
 	"druid": {
 		Name:        "Druid",
@@ -69,6 +105,17 @@ var Classes = map[string]Class{
 			"medium armor",
 			"shields",
 			"simple weapons"},
+		SpellcastingAbility: Wis,
+		Subclasses: map[string]Subclass{
+			"leaf": {
+				Name:        "Leaf",
+				Description: "",
+			},
+			"shifter": {
+				Name:        "Shifter",
+				Description: "",
+			},
+		},
 	},
 	"fighter": {
 		Name:        "Fighter",
@@ -89,6 +136,18 @@ var Classes = map[string]Class{
 			"armor",
 			"shields",
 			"weapons"},
+		// Implement SpellcastingAbility = Int if subclass = Spell Blade
+		Subclasses: map[string]Subclass{
+			"spell blade": {
+				Name:                "Spell Blade",
+				Description:         "",
+				SpellcastingAbility: Int,
+			},
+			"weapon master": {
+				Name:        "Weapon Master",
+				Description: "",
+			},
+		},
 	},
 	"mechanist": {
 		Name:        "Mechanist",
@@ -106,6 +165,18 @@ var Classes = map[string]Class{
 			"medium armor",
 			"shields",
 			"weapons"},
+		// Implement SpellcastingAbility = Int if subclass = Spellwright
+		Subclasses: map[string]Subclass{
+			"metallurgist": {
+				Name:        "Metallurgist",
+				Description: "",
+			},
+			"spellwright": {
+				Name:                "Spellwright",
+				Description:         "",
+				SpellcastingAbility: Int,
+			},
+		},
 	},
 	"monk": {
 		Name:        "Monk",
@@ -119,6 +190,16 @@ var Classes = map[string]Class{
 		},
 		SaveProficiencies:      []string{"str", "dex"},
 		EquipmentProficiencies: []string{"simple weapons", "shortswords"},
+		Subclasses: map[string]Subclass{
+			"flickering dark": {
+				Name:        "Flickering Dark",
+				Description: "",
+			},
+			"open hand": {
+				Name:        "Open Hand",
+				Description: "",
+			},
+		},
 	},
 	"paladin": {
 		Name:        "Paladin",
@@ -136,6 +217,17 @@ var Classes = map[string]Class{
 		},
 		SaveProficiencies:      []string{"wis", "cha"},
 		EquipmentProficiencies: []string{"armor", "shields", "weapons"},
+		SpellcastingAbility:    Cha,
+		Subclasses: map[string]Subclass{
+			"devotion": {
+				Name:        "Devotion",
+				Description: "",
+			},
+			"justice": {
+				Name:        "Justice",
+				Description: "",
+			},
+		},
 	},
 	"ranger": {
 		Name:        "Ranger",
@@ -152,6 +244,17 @@ var Classes = map[string]Class{
 			"light armor",
 			"medium armor",
 			"shields", "weapons"},
+		SpellcastingAbility: Wis,
+		Subclasses: map[string]Subclass{
+			"hunter": {
+				Name:        "Hunter",
+				Description: "",
+			},
+			"pack master": {
+				Name:        "Pack Master",
+				Description: "",
+			},
+		},
 	},
 	"rogue": {
 		Name:        "Rogue",
@@ -168,6 +271,16 @@ var Classes = map[string]Class{
 			"light armor",
 			"simple weapons",
 			"finesse weapons"},
+		Subclasses: map[string]Subclass{
+			"enforcer": {
+				Name:        "Enforcer",
+				Description: "",
+			},
+			"thief": {
+				Name:        "Thief",
+				Description: "",
+			},
+		},
 	},
 	"sorcerer": {
 		Name:        "Sorcerer",
@@ -181,6 +294,17 @@ var Classes = map[string]Class{
 		},
 		SaveProficiencies:      []string{"con", "cha"},
 		EquipmentProficiencies: []string{"simple weapons"},
+		SpellcastingAbility:    Cha,
+		Subclasses: map[string]Subclass{
+			"chaos": {
+				Name:        "Chaos",
+				Description: "",
+			},
+			"draconic": {
+				Name:        "Draconic",
+				Description: "",
+			},
+		},
 	},
 	"warlock": {
 		Name:        "Warlock",
@@ -198,6 +322,17 @@ var Classes = map[string]Class{
 			"medium armor",
 			"shields",
 			"simple weapons"},
+		SpellcastingAbility: Cha,
+		Subclasses: map[string]Subclass{
+			"fiend": {
+				Name:        "Fiend",
+				Description: "",
+			},
+			"reaper": {
+				Name:        "Reaper",
+				Description: "",
+			},
+		},
 	},
 	"wizard": {
 		Name:        "Wizard",
@@ -211,5 +346,16 @@ var Classes = map[string]Class{
 		},
 		SaveProficiencies:      []string{"int", "wis"},
 		EquipmentProficiencies: []string{"simple weapons"},
+		SpellcastingAbility:    Int,
+		Subclasses: map[string]Subclass{
+			"battle mage": {
+				Name:        "Battle Mage",
+				Description: "",
+			},
+			"cantrip adept": {
+				Name:        "Cantrip Adept",
+				Description: "",
+			},
+		},
 	},
 }

@@ -21,7 +21,7 @@ func TestAbilityScoreModifier(t *testing.T) {
 }
 
 func TestAbilityAssign(t *testing.T) {
-	actual := AbilityAssign()
+	actual := abilityRollingOptions()
 	actualKeys := GetAbilityRollingOptions()
 	assert.Equal(t, 8, len(actual))
 	assert.Equal(t, 8, len(actualKeys))
@@ -121,17 +121,12 @@ func TestGetBaseAbilityArrayWithRolls(t *testing.T) {
 
 func TestGetPreGeneratedAbilityArray(t *testing.T) {
 	Raw := []int{18, 17, 16, 15, 14, 13}
-	ArchetypeBonus := AbilityArrayTemplate()
-	ArchetypeBonus["cha"] = 2
-	ArchetypeBonus["int"] = 1
-	LevelChangeIncrease := AbilityArrayTemplate()
-	LevelChangeIncrease["dex"] = 2
-	AdditionalBonus := AbilityArrayTemplate()
-	AdditionalBonus["str"] = 2
+	bonusArray := BonusArrayTemplate()
+	bonusArray["dex"]["level01"] = 2
+	bonusArray["str"]["talent01"] = 2
 	ctxRef := "TestGetPreGeneratedAbilityArray"
 	isMonsterOrGod := false
-	a := GetPreGeneratedAbilityArray(Raw, LevelChangeIncrease,
-		AdditionalBonus, ctxRef, isMonsterOrGod)
+	a := GetPreGeneratedAbilityArray(Raw, bonusArray, ctxRef, isMonsterOrGod)
 	// fmt.Println(a.ToPrettyString())
 	assert.Equal(t, 20, a.Values["str"])
 	assert.Equal(t, 13, a.Values["cha"])
@@ -150,16 +145,15 @@ func TestGetAbilityArray(t *testing.T) {
 	rollingOption := "standard"
 	sortOrder := []string{"dex", "con", "str",
 		"cha", "wis", "int"}
-	LevelChangeIncrease := AbilityArrayTemplate()
-	LevelChangeIncrease["dex"] = 2
-	AdditionalBonus := AbilityArrayTemplate()
-	AdditionalBonus["str"] = 2
+	bonusArray := BonusArrayTemplate()
+	bonusArray["dex"]["level01"] = 2
+	bonusArray["str"]["talent01"] = 2
 	ctxRef := "TestGetAbilityArray"
 	isMonsterOrGod := true
 
 	// When
 	a, err := GetAbilityArray(rollingOption, sortOrder,
-		LevelChangeIncrease, AdditionalBonus,
+		bonusArray,
 		ctxRef, isMonsterOrGod, observedLoggerSugared)
 
 	// Then
@@ -193,25 +187,25 @@ func TestAdjustValues(t *testing.T) {
 	rollingOption := "standard"
 	sortOrder := []string{"dex", "con", "str",
 		"cha", "wis", "int"}
-	LevelChangeIncrease := AbilityArrayTemplate()
-	AdditionalBonus := AbilityArrayTemplate()
+	bonusArray := BonusArrayTemplate()
 	ctxRef := "TestAdjustValues"
 	isMonsterOrGod := false
 
 	a, err := GetAbilityArray(rollingOption, sortOrder,
-		LevelChangeIncrease, AdditionalBonus,
+		bonusArray,
 		ctxRef, isMonsterOrGod, observedLoggerSugared)
 	assert.Equal(t, nil, err)
-	a.AdjustValues("ArchetypeBonus", "cha",
+	a.AdjustBonuses("cha", "test01",
 		2, observedLoggerSugared)
-	a.AdjustValues("ArchetypeBonus", "int",
+	a.AdjustBonuses("int", "test02",
 		1, observedLoggerSugared)
-	assert.Equal(t, 12, a.Values["cha"])
-	assert.Equal(t, 8, a.Values["int"])
-	a.AdjustValues("LevelChangeIncrease", "dex",
+	//fmt.Println(a.ToPrettyString())
+	assert.Equal(t, 14, a.Values["cha"])
+	assert.Equal(t, 9, a.Values["int"])
+	a.AdjustBonuses("dex", "level01",
 		2, observedLoggerSugared)
 	assert.Equal(t, 17, a.Values["dex"])
-	a.AdjustValues("AdditionalBonus", "str",
+	a.AdjustBonuses("str", "level02",
 		2, observedLoggerSugared)
 	assert.Equal(t, 15, a.Values["str"])
 	actual, _ := a.GetModifier("str")
@@ -221,5 +215,5 @@ func TestAdjustValues(t *testing.T) {
 	// fmt.Println(a.ToPrettyString())
 
 	allLogs := observedLogs.All()
-	assert.Equal(t, "AdjustValues", allLogs[len(allLogs)-1].Message)
+	assert.Equal(t, "AdjustBonuses", allLogs[len(allLogs)-1].Message)
 }

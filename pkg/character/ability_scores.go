@@ -58,30 +58,30 @@ var AbilityScorePointCost = func() map[int]int {
 // to for skills checks
 var SkillAbilityLookup = func() map[string]string {
 	return map[string]string{
-		"athletics":       "str",
 		"acrobatics":      "dex",
-		"sleight of hand": "dex",
-		"stealth":         "dex",
-		"arcana":          "int",
-		"history":         "int",
-		"investigation":   "int",
-		"nature":          "int",
-		"religion":        "int",
 		"animal handling": "wis",
-		"insight":         "wis",
-		"medicine":        "wis",
-		"perception":      "wis",
-		"survival":        "wis",
+		"arcana":          "int",
+		"athletics":       "str",
 		"deception":       "cha",
+		"history":         "int",
+		"insight":         "wis",
 		"intimidation":    "cha",
+		"investigation":   "int",
+		"medicine":        "wis",
+		"nature":          "int",
+		"perception":      "wis",
 		"performance":     "cha",
 		"persuasion":      "cha",
+		"religion":        "int",
+		"sleight of hand": "dex",
+		"stealth":         "dex",
+		"survival":        "wis",
 	}
 }
 
-// AbilityAssign returns a map with all the options for "rolling" the
+// abilityRollingOptions returns a map with all the options for "rolling" the
 // ability values and in the case of set ones, the values to be used.
-var AbilityAssign = func() map[string][]int {
+var abilityRollingOptions = func() map[string][]int {
 	return map[string][]int{
 		"predefined":        {},
 		"strict":            {}, // 3d6
@@ -106,10 +106,42 @@ var AbilityArrayTemplate = func() map[string]int {
 	}
 }
 
+// BonusArrayTemplate is for store a source along with each bonus entry. The causes of a bonus to the ability array
+// are too varied to limited to just be level and others. By adding a source and recording the different additions
+// separately, it gives us a way we can keep track of where things came from.
+var BonusArrayTemplate = func() map[string]map[string]int {
+	BAT := make(map[string]map[string]int)
+	BAT["str"] = map[string]int{"init": 0}
+	BAT["dex"] = map[string]int{"init": 0}
+	BAT["con"] = map[string]int{"init": 0}
+	BAT["int"] = map[string]int{"init": 0}
+	BAT["wis"] = map[string]int{"init": 0}
+	BAT["cha"] = map[string]int{"init": 0}
+	return BAT
+}
+
+// CalculateTotalBonuses sums up all bonus values for each ability and returns the totals.
+func (pa *AbilityArray) CalculateTotalBonuses() {
+	// Create a map to hold the total bonuses for each ability
+	pa.TotalBonuses = make(map[string]int)
+
+	// Iterate over each ability and its inner bonus sources
+	for ability, sources := range pa.BonusArray {
+		// Sum all the values for the current ability
+		total := 0
+		for _, value := range sources {
+			total += value
+		}
+		// Assign the total to the result map
+		pa.TotalBonuses[ability] = total
+	}
+
+}
+
 // GetAbilityRollingOptions returns a slice of strings getting the
 // possible values to pass for "rolling" options.
 func GetAbilityRollingOptions() (options []string) {
-	a := AbilityAssign()
+	a := abilityRollingOptions()
 	for k := range a {
 		options = append(options, k)
 	}
@@ -122,7 +154,7 @@ func GetAbilityRollingOptions() (options []string) {
 //	Where:
 //	  strict = 3d6
 //	  common = 4d6 drop lowest 1
-//	The rest of the options are set values defined in AbilityAssign
+//	The rest of the options are set values defined in abilityRollingOptions
 func rollRawAbilitySlice(rollOption string,
 	logger *zap.SugaredLogger) (rollSlice []int, err error) {
 	// %s is The number of seconds since the Epoch
@@ -196,13 +228,13 @@ func GetPreGeneratedBaseAbilityArray(pre []int) (map[string]int, []string) {
 // GetBaseAbilityArray returns a generated Base Ability array and the unsorted
 //
 //	values that went into it. The values are generated depending on the
-//	rollingOption passed (see AbilityAssign). How they are assigned to the
+//	rollingOption passed (see abilityRollingOptions). How they are assigned to the
 //	abilities depends on a sorting order provided by the sortSlice and
 //	a rolling option.
 func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 	logger *zap.SugaredLogger) (r map[string]int, rawValueSlice []int, err error) {
 	r = AbilityArrayTemplate()
-	lu := AbilityAssign()
+	lu := abilityRollingOptions()
 	switch rollingOption {
 	case "common":
 		rawValueSlice, err = rollRawAbilitySlice(rollingOption, logger)
@@ -264,34 +296,34 @@ func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 //	  Modifiers are the modifiers based on Values
 //	  CtxRef is the context reference for the assignment
 type AbilityArray struct {
-	Raw                 []int          `json:"raw"`
-	RollingOption       string         `json:"rolling_option"`
-	SortOrder           []string       `json:"sort_order"`
-	Base                map[string]int `json:"base"`
-	LevelChangeIncrease map[string]int `json:"level_change_increase"`
-	AdditionalBonus     map[string]int `json:"additional_bonus"`
-	Values              map[string]int `json:"values"`
-	Modifiers           map[string]int `json:"modifiers"`
-	CtxRef              string         `json:"ctx_ref"`
-	IsMonsterOrGod      bool           `json:"is_monster_or_god"`
+	Raw            []int                     `json:"raw"`
+	RollingOption  string                    `json:"rolling_option"`
+	SortOrder      []string                  `json:"sort_order"`
+	Base           map[string]int            `json:"base"`
+	BonusArray     map[string]map[string]int `json:"level_change_increase"`
+	TotalBonuses   map[string]int            `json:"total_bonuses"`
+	Values         map[string]int            `json:"values"`
+	Modifiers      map[string]int            `json:"modifiers"`
+	CtxRef         string                    `json:"ctx_ref"`
+	IsMonsterOrGod bool                      `json:"is_monster_or_god"`
 }
 
-func GetPreGeneratedAbilityArray(Raw []int, LevelChangeIncrease map[string]int,
-	AdditionalBonus map[string]int, CtxRef string, IsMonsterOrGod bool) *AbilityArray {
+func GetPreGeneratedAbilityArray(Raw []int, BonusArray map[string]map[string]int,
+	CtxRef string, IsMonsterOrGod bool) *AbilityArray {
 	b, sortOrder := GetPreGeneratedBaseAbilityArray(Raw)
 	values := AbilityArrayTemplate()
 	mods := AbilityArrayTemplate()
 	a := AbilityArray{
-		Raw:                 Raw,
-		RollingOption:       "pregenerated",
-		SortOrder:           sortOrder,
-		Base:                b,
-		LevelChangeIncrease: LevelChangeIncrease,
-		AdditionalBonus:     AdditionalBonus,
-		Values:              values,
-		Modifiers:           mods,
-		CtxRef:              CtxRef,
-		IsMonsterOrGod:      IsMonsterOrGod,
+		Raw:           Raw,
+		RollingOption: "pregenerated",
+		SortOrder:     sortOrder,
+		Base:          b,
+		BonusArray:    BonusArray,
+		//TotalBonuses:   TotalBonuses,
+		Values:         values,
+		Modifiers:      mods,
+		CtxRef:         CtxRef,
+		IsMonsterOrGod: IsMonsterOrGod,
 	}
 	a.setValuesAndModifiers()
 	return &a
@@ -313,8 +345,8 @@ func GetPreGeneratedAbilityArray(Raw []int, LevelChangeIncrease map[string]int,
 //	   string that you can use to keep track of it in the logs.
 func GetAbilityArray(RollingOption string,
 	SortOrder []string,
-	LevelChangeIncrease map[string]int,
-	AdditionalBonus map[string]int,
+	BonusArray map[string]map[string]int,
+	// TotalBonuses map[string]int,
 	CtxRef string,
 	IsMonsterOrGod bool,
 	logger *zap.SugaredLogger) (*AbilityArray, error) {
@@ -325,16 +357,16 @@ func GetAbilityArray(RollingOption string,
 	values := AbilityArrayTemplate()
 	mods := AbilityArrayTemplate()
 	a := AbilityArray{
-		Raw:                 raw,
-		RollingOption:       RollingOption,
-		SortOrder:           SortOrder,
-		Base:                b,
-		LevelChangeIncrease: LevelChangeIncrease,
-		AdditionalBonus:     AdditionalBonus,
-		Values:              values,
-		Modifiers:           mods,
-		CtxRef:              CtxRef,
-		IsMonsterOrGod:      IsMonsterOrGod,
+		Raw:           raw,
+		RollingOption: RollingOption,
+		SortOrder:     SortOrder,
+		Base:          b,
+		BonusArray:    BonusArray,
+		//TotalBonuses:   TotalBonuses,
+		Values:         values,
+		Modifiers:      mods,
+		CtxRef:         CtxRef,
+		IsMonsterOrGod: IsMonsterOrGod,
 	}
 	a.setValuesAndModifiers()
 	logger.Infow("GetAbilityArray", zap.Object("AbilityArray", &a))
@@ -346,8 +378,8 @@ func (pa *AbilityArray) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	enc.AddString("RollingOption", pa.RollingOption)
 	enc.AddString("SortOrder", helpers.StringSliceToString(pa.SortOrder))
 	enc.AddString("Base", AbilityMapToString(pa.Base))
-	enc.AddString("LevelChangeIncrease", AbilityMapToString(pa.LevelChangeIncrease))
-	enc.AddString("AdditionalBonus", AbilityMapToString(pa.AdditionalBonus))
+	enc.AddString("BonusArray", BonusArrayToString(pa.BonusArray))
+	enc.AddString("TotalBonuses", AbilityMapToString(pa.TotalBonuses))
 	enc.AddString("Values", AbilityMapToString(pa.Values))
 	enc.AddString("Modifiers", AbilityMapToString(pa.Modifiers))
 	enc.AddString("CtxRef", pa.CtxRef)
@@ -388,14 +420,14 @@ func (pa *AbilityArray) GetModifier(ability string) (int, error) {
 }
 
 func (pa *AbilityArray) setValuesAndModifiers() {
+	pa.CalculateTotalBonuses()
 	maxVal := 20
 	if pa.IsMonsterOrGod {
 		maxVal = 30 // Gods and Monsters can have ability scores up to 30
 	}
 	for k := range pa.Base {
 
-		tVal := pa.Base[k] + pa.LevelChangeIncrease[k] +
-			pa.AdditionalBonus[k]
+		tVal := pa.Base[k] + pa.TotalBonuses[k]
 		// Values cannot exceed 20 or 30. Set that as max.
 		if tVal > maxVal {
 			tVal = maxVal
@@ -417,22 +449,27 @@ func ValidateAbilityName(ability string) bool {
 	return false
 }
 
-// AdjustValues changes the totals in the maps within an AbilityArray
+// AdjustBonuses changes the totals in the maps within an AbilityArray
 // and recalculates the total values.
 //
 //	Where:
 //	  ValueType is "ArchetypeBonus", "LevelChangeIncrease", or "AdditionalBonus".
 //	  Values is a map containing the adjustments to make
-func (pa *AbilityArray) AdjustValues(ValueType string, Ability string,
-	ChangeValue int, logger *zap.SugaredLogger) {
-	switch ValueType {
-	case "LevelChangeIncrease":
-		pa.LevelChangeIncrease[Ability] += ChangeValue
-	case "AdditionalBonus":
-		pa.AdditionalBonus[Ability] += ChangeValue
+func (pa *AbilityArray) AdjustBonuses(Ability string,
+	ChangeReason string, ChangeValue int, logger *zap.SugaredLogger) {
+	value, ok := pa.BonusArray[Ability][ChangeReason]
+	if ok {
+		logger.Infow("AdjustBonuses",
+			zap.String("LogReason", "Value overwrite"),
+			zap.String("ChangeReason", ChangeReason),
+			zap.Int("ChangeValue", ChangeValue),
+			zap.Int("OldValue", value))
 	}
+
+	pa.BonusArray[Ability][ChangeReason] = ChangeValue
+
 	pa.setValuesAndModifiers()
-	logger.Infow("AdjustValues", zap.Object("AbilityArray", pa))
+	logger.Infow("AdjustBonuses", zap.Object("AbilityArray", pa))
 
 }
 
@@ -445,28 +482,51 @@ func AbilityMapToString(src map[string]int) (tgt string) {
 	return
 }
 
+// BonusArrayToString converts a map keyed with the abilities to a single string.
+func BonusArrayToString(src map[string]map[string]int) string {
+	result := ""
+
+	// Iterate over each ability in the outer map
+	for ability, bonuses := range src {
+		result += fmt.Sprintf("%s: {", ability)
+
+		// Iterate over each source and its value in the inner map
+		for source, value := range bonuses {
+			result += fmt.Sprintf(" %s: %d,", source, value)
+		}
+
+		// Remove the trailing comma and add the closing curly brace
+		if len(bonuses) > 0 {
+			result = result[:len(result)-1] // Remove last comma
+		}
+		result += " }\n"
+	}
+
+	return result
+}
+
 // ConvertToString converts an AbilityArray to a single string. The p argument
 // is for pretty print where everything lines up.
 func (pa *AbilityArray) ConvertToString(p bool) (s string) {
 	rawStr := helpers.IntSliceToString(pa.Raw)
 	orderStr := helpers.StringSliceToString(pa.SortOrder)
 	baseStr := AbilityMapToString(pa.Base)
-	lvlStr := AbilityMapToString(pa.LevelChangeIncrease)
-	addbStr := AbilityMapToString(pa.AdditionalBonus)
+	bonusArrayStr := BonusArrayToString(pa.BonusArray)
+	totalBonusesStr := AbilityMapToString(pa.TotalBonuses)
 	valStr := AbilityMapToString(pa.Values)
 	modStr := AbilityMapToString(pa.Modifiers)
 	pStr := ""
 	f := "AbilityArray -- %sRaw: %s, %sRollingOption: %s, " +
 		"%sSortOrder: %s, %sBaseArray: %s, " +
-		"%sLevelChangeIncreases: %s, " +
-		"%sAdditionalBonus: %s, %sValues: %s, %sModifiers: %s, %sCtxRef: %s, " +
+		"%sBonusArray: %s, " +
+		"%sTotalBonuses: %s, %sValues: %s, %sModifiers: %s, %sCtxRef: %s, " +
 		"%sIsMonsterOrGod: %v\n"
 	if p {
 		pStr = "\n\t"
 		f = "AbilityArray -- %sRaw:                   %s, %sRollingOption:         %s, " +
 			"%sSortOrder: %91s, %sBaseArray: %115s, " +
-			"%sLevelChangeIncreases:  %s, " +
-			"%sAdditionalBonus: %109s, %sValues: %118s, %sModifiers: %115s, " +
+			"%sBonusArray:  %s, " +
+			"%sTotalBonuses: %109s, %sValues: %118s, %sModifiers: %115s, " +
 			"%sCtxRef:                %s, %sIsMonsterOrGod:        %v\n"
 	}
 	s = fmt.Sprintf(f,
@@ -474,8 +534,8 @@ func (pa *AbilityArray) ConvertToString(p bool) (s string) {
 		pStr, pa.RollingOption,
 		pStr, orderStr,
 		pStr, baseStr,
-		pStr, lvlStr,
-		pStr, addbStr,
+		pStr, bonusArrayStr,
+		pStr, totalBonusesStr,
 		pStr, valStr,
 		pStr, modStr,
 		pStr, pa.CtxRef,
