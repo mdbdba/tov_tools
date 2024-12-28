@@ -191,7 +191,7 @@ func TestSetAbilitySkills(t *testing.T) {
 	// Run the function
 	testCharacter.SetAbilitySkills()
 
-	// testCharacter.PrintDetails()
+	testCharacter.PrintDetails()
 	// Define test cases
 	tests := []struct {
 		Skill              string

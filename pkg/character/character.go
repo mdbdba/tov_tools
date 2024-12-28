@@ -3,6 +3,7 @@ package character
 import (
 	"fmt"
 	"go.uber.org/zap"
+	"sort"
 )
 
 var zapLogger *zap.SugaredLogger
@@ -45,12 +46,14 @@ type Character struct {
 	SpellBook                    []string
 	AbilityProficiencies         []AbilitySkillProficiency
 	AbilityBonus                 map[string]map[string]AbilitySkillBonus
+	TotalAbilityBonus            map[string]int
 	AbilitySkills                map[string]AbilitySkill
 }
 
 func (c *Character) SetAbilitySkills() {
 
 	c.AbilitySkills = map[string]AbilitySkill{}
+	c.TotalAbilityBonus = map[string]int{}
 	// init
 	for skill, ability := range SkillAbilityLookup() {
 		c.AbilitySkills[skill] = AbilitySkill{
@@ -73,7 +76,7 @@ func (c *Character) SetAbilitySkills() {
 		// Retrieve the actual struct
 		abilitySkill := c.AbilitySkills[skill]
 
-		runningTotal := c.Abilities.Modifiers[abilitySkill.Ability]
+		runningTotal := 0 // c.Abilities.Modifiers[abilitySkill.Ability]
 		if abilitySkill.Proficient {
 			runningTotal += c.GetBaseProficiencyBonus()
 		}
@@ -90,8 +93,9 @@ func (c *Character) SetAbilitySkills() {
 			// }
 		}
 
-		abilitySkill.Value = runningTotal
+		abilitySkill.Value = runningTotal + c.Abilities.Modifiers[abilitySkill.Ability]
 		c.AbilitySkills[skill] = abilitySkill
+		c.TotalAbilityBonus[skill] = runningTotal
 	}
 	//fmt.Println(c.AbilitySkills)
 }
@@ -256,6 +260,7 @@ func createDefaultAbilities() AbilityArray {
 
 // PrintDetails prints detailed information about the character
 func (c *Character) PrintDetails() {
+	abilityOrder := []string{"str", "dex", "con", "int", "wis", "cha"}
 	fmt.Printf("Character: %s\n", c.Name)
 	fmt.Printf("Class: %s\n", c.CharacterClass)
 	fmt.Printf("Subclass To Implement: %s\n", c.CharacterSubClassToImplement.Name)
@@ -279,25 +284,65 @@ func (c *Character) PrintDetails() {
 		//fmt.Printf("  Benefits: %v\n", c.Talents[x].Benefits)
 	}
 	fmt.Printf("Spell Book: %s\n", c.SpellBook)
-	for x := range c.Abilities.Modifiers {
-		fmt.Printf("Ability: %s, Modifier: %d\n", x, c.Abilities.Modifiers[x])
-	}
-	for x := range c.AbilityProficiencies {
-		fmt.Printf("Ability Proficiencies [ %s ]: %s\n",
-			c.AbilityProficiencies[x].Source, c.AbilityProficiencies[x].Skill)
+	headerWidth := 4 // Length of the longest ability name (e.g., "cha") + padding
+	valueWidth := 4  // Padding for consistent alignment
+	abilityHeaderStr := "            "
+	abilityValueStr := "Values     "
+	abilityModifierStr := "Modifiers  "
+	for i := 0; i < 5; i++ {
+		abilityHeaderStr += fmt.Sprintf("%-*s", headerWidth, abilityOrder[i])
+		abilityValueStr += fmt.Sprintf("%*d", valueWidth, c.Abilities.Values[abilityOrder[i]])
+		abilityModifierStr += fmt.Sprintf("%*d", valueWidth, c.Abilities.Modifiers[abilityOrder[i]])
+
 	}
 
+	fmt.Printf("Abilities:\n    %s\n", abilityHeaderStr)
+	fmt.Printf("    %s\n", abilityValueStr)
+	fmt.Printf("    %s\n", abilityModifierStr)
+	// for x := range c.Abilities.Modifiers {
+	// 	fmt.Printf("Ability: %s, Modifier: %d\n", x, c.Abilities.Modifiers[x])
+	// }
+	tmpStr := ""
+	separator := ""
+	for x := range c.AbilityProficiencies {
+		tmpStr += fmt.Sprintf("%s%s (%s)", separator,
+			c.AbilityProficiencies[x].Skill, c.AbilityProficiencies[x].Source)
+		separator = ", "
+	}
+	fmt.Printf("\nAbility Proficiencies: %s\n", tmpStr)
+
+	tmpStr = ""
 	for x := range c.AbilityBonus {
+		separator = ""
+		tmpStr += fmt.Sprintf("\n%18s: ", x)
 		for y := range c.AbilityBonus[x] {
-			fmt.Printf("Ability Bonus [ %s, %s ]: %s, %d\n",
-				x, y, c.AbilityBonus[x][y].Source, c.AbilityBonus[x][y].Bonus)
+			tmpStr += fmt.Sprintf("%s%d (%s)",
+				separator,
+				c.AbilityBonus[x][y].Bonus,
+				c.AbilityBonus[x][y].Source)
+			separator = ", "
 		}
 	}
+	fmt.Printf("Ability Bonus: %s\n\n", tmpStr)
 
+	tmpStr = ""
+	keys := make([]string, 0, len(c.AbilitySkills))
 	for x := range c.AbilitySkills {
-		fmt.Printf("Ability Skills [ %s ]: %s, %v , %d\n",
-			x, c.AbilitySkills[x].Ability, c.AbilitySkills[x].Proficient,
-			c.AbilitySkills[x].Value)
+		keys = append(keys, x)
 	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		proficientChar := "-"
+		if c.AbilitySkills[key].Proficient {
+			proficientChar = "+"
+		}
+		tmpStr += fmt.Sprintf("%s%18s (%3s): %4d %4d %4d\n",
+			proficientChar, key, c.AbilitySkills[key].Ability,
+			c.Abilities.Modifiers[c.AbilitySkills[key].Ability],
+			c.TotalAbilityBonus[key],
+			c.AbilitySkills[key].Value)
+	}
+	fmt.Printf("Ability Skills:\nP      Name (ability)       Base Bonus Total\n")
+	fmt.Printf("---------------------------------------------\n%s\n", tmpStr)
 
 }
