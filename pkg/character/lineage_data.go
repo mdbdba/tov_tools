@@ -5,6 +5,7 @@ import (
 )
 
 var PredefinedTraitsData = map[string]LineagePreDefinedTraits{
+
 	"dwarf": {
 		Lineage: "Dwarf",
 		Traits: map[string]string{
@@ -55,32 +56,52 @@ var PredefinedTraitsData = map[string]LineagePreDefinedTraits{
 var LineageNaturalAdaptations = map[string]LineageNaturalAdaptationTraitDescriptions{
 	"beastkin": LineageNaturalAdaptationTraitDescriptions{
 		Lineage: "Beastkin",
-		Traits: map[string]string{
-			"Avian":   "Leathery, feathery, or gossamer wings sprout from our back and/or connect to your outstretched arms. You have a flying speed equal to your walking speed. You can't fly while wearing medium or heavy armor. Carrying a heavy load or a creature of your size or larger while flying reduces your speed by half",
-			"Agile":   "Sharp claws, cloven hooves, robust limbs, reversed joints, or suction pads on your hands and feet allow you to scrabble up trees, rock faces, and uneven surfaces with ease.  You have a climbing speed equal to your walking speed. In addition, you have advantage on saves made to avoid being knocked prone.",
-			"Aquatic": "Oily fur, scales, fins, webbed hands and feet, or long, gangly limbs are common for your people. You have a swimming speed equal to your walking speed. You an hold your breath for up to 20 minutes.",
-			"Sturdy":  "Powerful limbs, fat reserves, or a thick hide allow you to endure harm and accomplish feat of remarkable athleticism. When you arent wearing armor, you have a natural AC of 13+ your DEX modifier. In addition, you count as one size larger when determining your carrying capacity and the weight you can push or drag.",
+		Traits: map[string]map[string]string{
+			"Natural Adaptation": {
+				"Avian":   "Leathery, feathery, or gossamer wings sprout from our back and/or connect to your outstretched arms. You have a flying speed equal to your walking speed. You can't fly while wearing medium or heavy armor. Carrying a heavy load or a creature of your size or larger while flying reduces your speed by half",
+				"Agile":   "Sharp claws, cloven hooves, robust limbs, reversed joints, or suction pads on your hands and feet allow you to scrabble up trees, rock faces, and uneven surfaces with ease.  You have a climbing speed equal to your walking speed. In addition, you have advantage on saves made to avoid being knocked prone.",
+				"Aquatic": "Oily fur, scales, fins, webbed hands and feet, or long, gangly limbs are common for your people. You have a swimming speed equal to your walking speed. You an hold your breath for up to 20 minutes.",
+				"Sturdy":  "Powerful limbs, fat reserves, or a thick hide allow you to endure harm and accomplish feat of remarkable athleticism. When you arent wearing armor, you have a natural AC of 13+ your DEX modifier. In addition, you count as one size larger when determining your carrying capacity and the weight you can push or drag.",
+			},
+			"Animal Instinct": {
+				"Perception": "You have proficiency in the Perception skill.",
+				"Survival":   "You have proficiency in the Survival skill.",
+			},
+			"Natural Weapons": {
+				"Other":  "You have some other feature that serves as a natural weapon.",
+				"Claws":  "You have claws that serve as a natural weapon.",
+				"Horns":  "You have horns that serve as a natural weapon.",
+				"Hooves": "You have hooves that serve as a natural weapon.",
+				"Fangs":  "You have fangs that serve as a natural weapon.",
+				"Spines": "You have spines that serve as a natural weapon.",
+			},
 		},
 	},
 	"kobold": LineageNaturalAdaptationTraitDescriptions{
 		Lineage: "Kobold",
-		Traits: map[string]string{
-			"Fierce (Small)":     "When a Large or larger creature you can see within 5 feet of you attacks you, you can use your reaction to attack that creature immediately after its attack.",
-			"Truescale (Medium)": "You naturally thick scales provide significant protection. You have a natural AC of 13+ your DEX modifier. In addition, you have resistance to one of the following types of damage: acid, cold, fire, lightning, or poison (choose during character creation",
+		Traits: map[string]map[string]string{
+			"Natural Adaptation": {
+				"Fierce (Small)":     "When a Large or larger creature you can see within 5 feet of you attacks you, you can use your reaction to attack that creature immediately after its attack.",
+				"Truescale (Medium)": "You naturally thick scales provide significant protection. You have a natural AC of 13+ your DEX modifier. In addition, you have resistance to one of the following types of damage: acid, cold, fire, lightning, or poison (choose during character creation",
+			},
 		},
 	},
 	"syderean": LineageNaturalAdaptationTraitDescriptions{
 		Lineage: "Syderean",
-		Traits: map[string]string{
-			"Celestial": "You possess notable physical characteristics that mark your connection to realms of good and order. You might have luminous eyes, metallic-hued skin, or possess the ability to stay perfectly still for hours. You also gain Blessed Guise.  Once per long rest, you can use a bonus action to assume an otherworldly guise for 1 minute. When you do so, you sprout spectral wings and gain a flying speed equal to you walking speed for the duration of your transformation.  While transformed, once on each of your turns when you deal damage with an attack or spell, you can choose to convert the damage type to radiant damage.",
-			"Fiendish":  "You possess notable physical characteristics that mark your connection to realms of evil or chaos. You might bear bony horns that jut from your skull, emit a perpetual odor of smoke, or have a barbed tail. You also gain Dreadful Guise. Once per long rest, you can use a bonus action to assume an otherworldy guise for 1 minute. While the transformation lasts, creatures of you choice that come within 10 feet of you for the first time on a turn or start their turn there must succeed on a CHA save (DC equals 10 + your PB) or become frightened of you until the end of your next turn.  Once a creature succeeds on this save, they can't be affected by this feature again for 24 hours. While transformed, once on each of your turns when you deal damage with an attack or spell, you choose to convert the damage type to necrotic or fire damage.",
+		Traits: map[string]map[string]string{
+			"Natural Adaptation": {
+				"Celestial": "You possess notable physical characteristics that mark your connection to realms of good and order. You might have luminous eyes, metallic-hued skin, or possess the ability to stay perfectly still for hours. You also gain Blessed Guise.  Once per long rest, you can use a bonus action to assume an otherworldly guise for 1 minute. When you do so, you sprout spectral wings and gain a flying speed equal to you walking speed for the duration of your transformation.  While transformed, once on each of your turns when you deal damage with an attack or spell, you can choose to convert the damage type to radiant damage.",
+				"Fiendish":  "You possess notable physical characteristics that mark your connection to realms of evil or chaos. You might bear bony horns that jut from your skull, emit a perpetual odor of smoke, or have a barbed tail. You also gain Dreadful Guise. Once per long rest, you can use a bonus action to assume an otherworldy guise for 1 minute. While the transformation lasts, creatures of you choice that come within 10 feet of you for the first time on a turn or start their turn there must succeed on a CHA save (DC equals 10 + your PB) or become frightened of you until the end of your next turn.  Once a creature succeeds on this save, they can't be affected by this feature again for 24 hours. While transformed, once on each of your turns when you deal damage with an attack or spell, you choose to convert the damage type to necrotic or fire damage.",
+			},
 		},
 	},
 	"smallfolk": LineageNaturalAdaptationTraitDescriptions{
 		Lineage: "Smallfolk",
-		Traits: map[string]string{
-			"Gnomish":  "Your ancestors made their homes underground or in dark woodlands, providing you with darkvision to a range of 60 feet. In addition, you learn the minor illusion cantrip.  Choose whether INT, WIS, or CHA is you spellcasting ability for this spell during character creation.",
-			"Halfling": "Your ancestors made their homes on the surface, displaying outsized pluck to drive back hostile wildlife and monsters. You have advantage on saves against being charmed or frightened.",
+		Traits: map[string]map[string]string{
+			"Natural Adaptation": {
+				"Gnomish":  "Your ancestors made their homes underground or in dark woodlands, providing you with darkvision to a range of 60 feet. In addition, you learn the minor illusion cantrip.  Choose whether INT, WIS, or CHA is you spellcasting ability for this spell during character creation.",
+				"Halfling": "Your ancestors made their homes on the surface, displaying outsized pluck to drive back hostile wildlife and monsters. You have advantage on saves against being charmed or frightened.",
+			},
 		},
 	},
 }

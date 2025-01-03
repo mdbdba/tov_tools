@@ -13,7 +13,7 @@ type LineagePreDefinedTraits struct {
 
 type LineageNaturalAdaptationTraitDescriptions struct {
 	Lineage string
-	Traits  map[string]string
+	Traits  map[string]map[string]string
 }
 
 // TraitChoices represents the trait options and the number to select.

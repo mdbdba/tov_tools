@@ -1,6 +1,7 @@
 package character
 
 import (
+	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"testing"
@@ -29,15 +30,16 @@ func TestSkillBonusTalent(t *testing.T) {
 	// sortOrder := []string{"dex", "con", "str", "cha", "wis", "int"}
 	rollingOption := "common"
 	// Create a test character
-	testCharacter := NewCharacter(
+	testCharacter, err := NewCharacter(
 		"Test Mage", 3, "Wizard", "battle mage",
-		Lineage{}, Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
 		"Standard", "Character talent test", observedLoggerSugared)
 
+	assert.NoError(t, err, "Unexpected error when creating test character")
 	testCharacter.BaseSkillBonus = map[string]int{"Arcana": 0}
 
 	// Add the talent to the character
-	err := testCharacter.AddTalent(talentArcaneMind)
+	err = testCharacter.AddTalent(talentArcaneMind)
 	if err != nil {
 		t.Fatalf("failed to add talent: %v", err)
 	}
@@ -72,13 +74,14 @@ func TestFlatBonusTalent(t *testing.T) {
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 	rollingOption := "common"
 	// Create a test character
-	testCharacter := NewCharacter(
+	testCharacter, err := NewCharacter(
 		"Test Fighter", 1, "Fighter", "weapon master",
-		Lineage{}, Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
 		"Standard", "Character talent test", observedLoggerSugared)
 
+	assert.NoError(t, err, "Unexpected error when creating test character")
 	// Add the talent to the character
-	err := testCharacter.AddTalent(talentStrongArm)
+	err = testCharacter.AddTalent(talentStrongArm)
 	if err != nil {
 		t.Fatalf("failed to add talent: %v", err)
 	}
@@ -115,15 +118,16 @@ func TestSpellSwapTalent(t *testing.T) {
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 	rollingOption := "common"
 	// Create a test character
-	testCharacter := NewCharacter(
+	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard", "battle mage",
-		Lineage{}, Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
 		"Standard", "Character talent test", observedLoggerSugared)
 
+	assert.NoError(t, err, "Error creating test character")
 	testCharacter.SpellBook = []string{"Firebolt", "Mage Armor"}
 
 	// Add the talent to the character
-	err := testCharacter.AddTalent(talentVersatileSpellcaster)
+	err = testCharacter.AddTalent(talentVersatileSpellcaster)
 	if err != nil {
 		t.Fatalf("failed to add talent: %v", err)
 	}
