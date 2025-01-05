@@ -45,7 +45,7 @@ func TestSkillBonusTalent(t *testing.T) {
 	}
 
 	// Expected Arcana bonus: base proficiency bonus * 2
-	expectedBonus := int(testCharacter.GetBaseProficiencyBonus() * 2)
+	expectedBonus := int(testCharacter.GetProficiencyBonus() * 2)
 	actualBonus := testCharacter.BaseSkillBonus["Arcana"]
 
 	// Verify the result

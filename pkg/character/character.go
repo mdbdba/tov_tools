@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"regexp"
 	"sort"
+	"tov_tools/pkg/dice"
 )
 
 var zapLogger *zap.SugaredLogger
@@ -39,9 +40,9 @@ var DependencyLookup = map[string]AbilityDependency{
 		DependentSkills: []string{"arcana", "history", "investigation", "nature", "religion"},
 		DependentValues: map[string]func(*Character) int{
 			"PassiveInvestigation": func(c *Character) int {
-				returnValue := 0
+				returnValue := 10
 				if c.AbilitySkills["investigation"].Proficient {
-					returnValue += c.GetBaseProficiencyBonus()
+					returnValue += c.GetProficiencyBonus()
 				}
 				return c.GetAbility("int") + returnValue
 			},
@@ -52,9 +53,16 @@ var DependencyLookup = map[string]AbilityDependency{
 		DependentSkills: []string{"animal handling", "insight", "medicine", "perception", "survival"},
 		DependentValues: map[string]func(*Character) int{
 			"PassivePerception": func(c *Character) int {
-				returnValue := 0
+				returnValue := 10
 				if c.AbilitySkills["perception"].Proficient {
-					returnValue += c.GetBaseProficiencyBonus()
+					returnValue += c.GetProficiencyBonus()
+				}
+				return c.GetAbility("wis") + returnValue
+			},
+			"PassiveInsight": func(c *Character) int {
+				returnValue := 10
+				if c.AbilitySkills["insight"].Proficient {
+					returnValue += c.GetProficiencyBonus()
 				}
 				return c.GetAbility("wis") + returnValue
 			},
@@ -63,15 +71,7 @@ var DependencyLookup = map[string]AbilityDependency{
 	"cha": {
 		Name:            "cha",
 		DependentSkills: []string{"deception", "intimidation", "performance", "persuasion"},
-		DependentValues: map[string]func(*Character) int{
-			"PassiveInsight": func(c *Character) int {
-				returnValue := 0
-				if c.AbilitySkills["insight"].Proficient {
-					returnValue += c.GetBaseProficiencyBonus()
-				}
-				return c.GetAbility("cha") + returnValue
-			},
-		},
+		DependentValues: map[string]func(*Character) int{},
 	},
 }
 
@@ -157,6 +157,7 @@ type Character struct {
 	Name                         string
 	Level                        int
 	CharacterClass               string
+	CharacterClassBuildType      ClassBuildType
 	CharacterSubClassToImplement Subclass // store subclass in case the pc is < 3rd level
 	CharacterSubClass            Subclass
 	HitDice                      []HitDie
@@ -170,6 +171,8 @@ type Character struct {
 	Abilities                    AbilityArray
 	AbilitySaveModifiers         map[string]int
 	RollingOption                string
+	HitPointBonuses              map[string]int
+	TotalHitPointBonuses         int
 	MaxHitPoints                 int
 	CurrentHitPoints             int
 	InitiativeBonus              int
@@ -180,6 +183,7 @@ type Character struct {
 	SpellBook                    []string
 	SkillProficiencies           []AbilitySkillProficiency
 	SkillBonus                   map[string]map[string]AbilitySkillBonus
+	ProficiencyBonusBonus        map[string]AbilitySkillBonus
 	TotalSkillModifiers          map[string]int
 	MovementBase                 map[string]MovementValue
 	MovementBonus                map[string]map[string]MovementValue
@@ -207,8 +211,8 @@ func (c *Character) SetAbilitySaveModifiers() {
 		for _, proficiency := range Classes[c.CharacterClass].SaveProficiencies {
 			if i == proficiency {
 				// fmt.Printf("Proficiency: %s\n", proficiency)
-				// fmt.Printf("PB: %d\n", c.GetBaseProficiencyBonus())
-				c.AbilitySaveModifiers[i] += c.GetBaseProficiencyBonus()
+				// fmt.Printf("PB: %d\n", c.GetProficiencyBonus())
+				c.AbilitySaveModifiers[i] += c.GetProficiencyBonus()
 			}
 		}
 	}
@@ -229,7 +233,7 @@ func (c *Character) IsProficientIn(skill string) bool {
 func (c *Character) CalculateTotalSkillBonus(skill string) int {
 	runningTotal := c.Abilities.Modifiers[SkillAbilityLookup()[skill]]
 	if c.IsProficientIn(skill) {
-		runningTotal += c.GetBaseProficiencyBonus()
+		runningTotal += c.GetProficiencyBonus()
 	}
 
 	for _, bonus := range c.SkillBonus[skill] {
@@ -293,7 +297,7 @@ func (c *Character) SetAbilitySkills() {
 
 		runningTotal := 0 // c.Abilities.Modifiers[abilitySkill.Ability]
 		if abilitySkill.Proficient {
-			runningTotal += c.GetBaseProficiencyBonus()
+			runningTotal += c.GetProficiencyBonus()
 		}
 
 		for i := range c.SkillBonus[skill] {
@@ -321,8 +325,13 @@ func (c *Character) AddTalent(t Talent) error {
 	return nil
 }
 
-func (c *Character) GetBaseProficiencyBonus() int {
-	return c.Level/4 + 2
+func (c *Character) GetProficiencyBonus() int {
+	base := c.Level/4 + 2
+	bonus := 0
+	for i := range c.ProficiencyBonusBonus {
+		bonus += c.ProficiencyBonusBonus[i].Bonus
+	}
+	return base + bonus
 }
 
 func (c *Character) GetAbility(ability string) int {
@@ -350,7 +359,7 @@ func (c *Character) IncreaseAbility(ability string) error {
 }
 
 func (c *Character) AddSkillBonusMultiplier(skillName string, multiplier float64) {
-	c.BaseSkillBonus[skillName] += int(float64(c.GetBaseProficiencyBonus()) * multiplier)
+	c.BaseSkillBonus[skillName] += int(float64(c.GetProficiencyBonus()) * multiplier)
 }
 
 func (c *Character) AddAbilityBonus(ability string, reason string, bonus int) {
@@ -380,6 +389,52 @@ func ValidateName(name string) error {
 
 	// If no error found, return nil
 	return nil
+}
+
+func (c *Character) InitHitPoints() {
+	hitPoints := 0
+	sides := 0
+	c.TotalHitPointBonuses = 0
+
+	for i := range c.HitPointBonuses {
+		c.TotalHitPointBonuses += c.HitPointBonuses[i]
+	}
+	Bonuses := c.Abilities.Modifiers["con"] + c.TotalHitPointBonuses
+
+	for i := range c.HitDice {
+		toRoll := c.HitDice[i].DiceType
+		switch toRoll {
+		case "d4":
+			sides = 4
+		case "d6":
+			sides = 6
+		case "d8":
+			sides = 8
+		case "d10":
+			sides = 10
+		case "d12":
+			sides = 12
+		case "d20":
+			sides = 20
+		}
+		if i == 0 {
+			hitPoints += sides + Bonuses
+		} else {
+			results, err := dice.Perform(sides, c.Level-1, "Character.InitHitPoints")
+			if err != nil {
+				panic(err)
+			}
+			hitPoints += results.Result + Bonuses
+		}
+	}
+	c.MaxHitPoints = hitPoints
+	c.CurrentHitPoints = hitPoints
+}
+
+func (c *Character) SetPassives() {
+	c.PassiveInvestigation = 10 + c.GetSkillBonus("investigation")
+	c.PassivePerception = 10 + c.GetSkillBonus("perception")
+	c.PassiveInsight = 10 + c.GetSkillBonus("insight")
 }
 
 // NewCharacter Method to create a new character with default properties.
@@ -444,6 +499,7 @@ func NewCharacter(
 			classBuildType = RandomClassBuildType(useClass.ClassBuildTypes)
 		}
 	}
+	classBuildInfo := useClass.ClassBuildTypes[classBuildType]
 
 	selectedSubclass := Subclass{}
 	implementedSubclass := Subclass{}
@@ -487,12 +543,25 @@ func NewCharacter(
 		return nil, fmt.Errorf("failed to get ability array: %v", err)
 	}
 
+	hd := []HitDie{
+		{
+			SourceClass: characterClass,
+			DiceType:    useClass.HitDie,
+			Max:         level,
+			Used:        0,
+		},
+	}
+
 	character := &Character{
 		Name:                         name,
 		Level:                        level,
 		CharacterClass:               characterClass,
+		CharacterClassBuildType:      classBuildInfo,
 		CharacterSubClassToImplement: selectedSubclass,
 		CharacterSubClass:            implementedSubclass,
+		HitDice:                      hd,
+		HitPointBonuses:              make(map[string]int),
+		ProficiencyBonusBonus:        make(map[string]AbilitySkillBonus),
 		MovementBase:                 Movement(float64(lineage.Speed)),
 		MovementBonus:                InitMovementBonus(),
 		Lineage:                      lineage,
@@ -506,6 +575,8 @@ func NewCharacter(
 	character.SetAbilitySkills()
 	character.SetAbilitySaveModifiers()
 	character.CalculateMovement()
+	character.SetPassives()
+	character.InitHitPoints()
 
 	return character, nil
 }
@@ -518,6 +589,37 @@ func (c *Character) PrintDetails() {
 	fmt.Printf("Subclass To Implement: %s\n", c.CharacterSubClassToImplement.Name)
 	fmt.Printf("Subclass: %s\n", c.CharacterSubClass.Name)
 	fmt.Printf("Level: %d\n", c.Level)
+	fmt.Printf("Proficiency Bonus: %d\n", c.GetProficiencyBonus())
+	fmt.Printf("Initiative Bonus: %d\n", c.InitiativeBonus)
+	fmt.Printf("Passive Insight: %d\n", c.PassiveInsight)
+	fmt.Printf("Passive Investigation: %d\n", c.PassiveInvestigation)
+	fmt.Printf("Passive Perception: %d\n", c.PassivePerception)
+
+	fmt.Printf("Rolling Option Used: %s\n", c.RollingOption)
+	headerWidth := 4 // Length of the longest ability name (e.g., "cha") + padding
+	valueWidth := 4  // Padding for consistent alignment
+	abilityHeaderStr := "            "
+	abilityValueStr := "Values     "
+	abilityModifierStr := "Modifiers  "
+	abilitySaveModifierStr := "Save Mods  "
+	for i := 0; i < 6; i++ {
+		abilityHeaderStr += fmt.Sprintf("%-*s", headerWidth, abilityOrder[i])
+		abilityValueStr += fmt.Sprintf("%*d", valueWidth, c.Abilities.Values[abilityOrder[i]])
+		abilityModifierStr += fmt.Sprintf("%*d", valueWidth, c.Abilities.Modifiers[abilityOrder[i]])
+		abilitySaveModifierStr += fmt.Sprintf("%*d", valueWidth, c.AbilitySaveModifiers[abilityOrder[i]])
+	}
+	fmt.Printf("Abilities:\n    %s\n", abilityHeaderStr)
+	fmt.Printf("    %s\n", abilityValueStr)
+	fmt.Printf("    %s\n", abilityModifierStr)
+	fmt.Printf("    %s\n", abilitySaveModifierStr)
+
+	fmt.Printf("Hit Dice:")
+	for i := range c.HitDice {
+		fmt.Printf(" %d@%s (%s)", c.HitDice[i].Max, c.HitDice[i].DiceType, c.HitDice[i].SourceClass)
+	}
+	fmt.Printf("\nMax Hit Points: %d\n", c.MaxHitPoints)
+	fmt.Printf("Current Hit Points: %d\n", c.CurrentHitPoints)
+
 	c.Lineage.PrintDetails()
 	fmt.Printf("Chosen Size: %s\n", c.ChosenSize)
 	fmt.Println("Chosen Traits:")
@@ -527,7 +629,6 @@ func (c *Character) PrintDetails() {
 	fmt.Printf("Heritage: %s, Languages: %v, Cultural Trait: %s\n",
 		c.Heritage.Name, c.Heritage.Languages, c.Heritage.CulturalTraits)
 
-	fmt.Printf("Rolling Option Used: %s\n", c.RollingOption)
 	fmt.Printf("Max Hit Points: %d\n", c.MaxHitPoints)
 	fmt.Printf("Current Hit Points: %d\n", c.CurrentHitPoints)
 	for x := range c.Talents {
@@ -536,26 +637,7 @@ func (c *Character) PrintDetails() {
 		//fmt.Printf("  Benefits: %v\n", c.Talents[x].Benefits)
 	}
 	fmt.Printf("Spell Book: %s\n", c.SpellBook)
-	headerWidth := 4 // Length of the longest ability name (e.g., "cha") + padding
-	valueWidth := 4  // Padding for consistent alignment
-	abilityHeaderStr := "            "
-	abilityValueStr := "Values     "
-	abilityModifierStr := "Modifiers  "
-	abilitySaveModifierStr := "Save Mods  "
-	for i := 0; i < 5; i++ {
-		abilityHeaderStr += fmt.Sprintf("%-*s", headerWidth, abilityOrder[i])
-		abilityValueStr += fmt.Sprintf("%*d", valueWidth, c.Abilities.Values[abilityOrder[i]])
-		abilityModifierStr += fmt.Sprintf("%*d", valueWidth, c.Abilities.Modifiers[abilityOrder[i]])
-		abilitySaveModifierStr += fmt.Sprintf("%*d", valueWidth, c.AbilitySaveModifiers[abilityOrder[i]])
-	}
 
-	fmt.Printf("Abilities:\n    %s\n", abilityHeaderStr)
-	fmt.Printf("    %s\n", abilityValueStr)
-	fmt.Printf("    %s\n", abilityModifierStr)
-	fmt.Printf("    %s\n", abilitySaveModifierStr)
-	// for x := range c.Abilities.Modifiers {
-	// 	fmt.Printf("Ability: %s, Modifier: %d\n", x, c.Abilities.Modifiers[x])
-	// }
 	tmpStr := ""
 	separator := ""
 	if len(c.SkillProficiencies) > 0 {

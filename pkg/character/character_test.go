@@ -267,7 +267,7 @@ func TestSetAbilitySkills(t *testing.T) {
 		pbStr := ""
 		for _, p := range testCharacter.SkillProficiencies {
 			if p.Skill == test.Skill {
-				pbStr = fmt.Sprintf(" + pb: %d", testCharacter.GetBaseProficiencyBonus())
+				pbStr = fmt.Sprintf(" + pb: %d", testCharacter.GetProficiencyBonus())
 			}
 			break
 		}
