@@ -44,7 +44,7 @@ var DependencyLookup = map[string]AbilityDependency{
 				if c.AbilitySkills["investigation"].Proficient {
 					returnValue += c.GetProficiencyBonus()
 				}
-				return c.GetAbility("int") + returnValue
+				return c.GetAbilityModifier("int") + returnValue
 			},
 		},
 	},
@@ -57,14 +57,14 @@ var DependencyLookup = map[string]AbilityDependency{
 				if c.AbilitySkills["perception"].Proficient {
 					returnValue += c.GetProficiencyBonus()
 				}
-				return c.GetAbility("wis") + returnValue
+				return c.GetAbilityModifier("wis") + returnValue
 			},
 			"PassiveInsight": func(c *Character) int {
 				returnValue := 10
 				if c.AbilitySkills["insight"].Proficient {
 					returnValue += c.GetProficiencyBonus()
 				}
-				return c.GetAbility("wis") + returnValue
+				return c.GetAbilityModifier("wis") + returnValue
 			},
 		},
 	},
@@ -174,6 +174,7 @@ type Character struct {
 	HitPointBonuses              map[string]int
 	TotalHitPointBonuses         int
 	MaxHitPoints                 int
+	TemporaryHitPoints           int
 	CurrentHitPoints             int
 	InitiativeBonus              int
 	PassiveInvestigation         int
@@ -391,6 +392,10 @@ func ValidateName(name string) error {
 	return nil
 }
 
+func (c *Character) GetTotalHitPoints() int {
+	return c.CurrentHitPoints + c.TemporaryHitPoints
+}
+
 func (c *Character) InitHitPoints() {
 	hitPoints := 0
 	sides := 0
@@ -419,8 +424,15 @@ func (c *Character) InitHitPoints() {
 		}
 		if i == 0 {
 			hitPoints += sides + Bonuses
+			if c.HitDice[i].Max > 1 {
+				results, err := dice.Perform(sides, c.HitDice[i].Max-1, "Character.InitHitPoints")
+				if err != nil {
+					panic(err)
+				}
+				hitPoints += results.Result + (Bonuses * (c.HitDice[i].Max - 1))
+			}
 		} else {
-			results, err := dice.Perform(sides, c.Level-1, "Character.InitHitPoints")
+			results, err := dice.Perform(sides, 1, "Character.InitHitPoints")
 			if err != nil {
 				panic(err)
 			}
@@ -431,11 +443,24 @@ func (c *Character) InitHitPoints() {
 	c.CurrentHitPoints = hitPoints
 }
 
+func (c *Character) ModifyTemporaryHitPoints(amount int) {
+	c.TemporaryHitPoints += amount
+}
+
+func (c *Character) UpdateAllDependencies() {
+	for i := range c.Abilities.Base {
+		c.UpdateDependencies(i)
+	}
+}
+
+/*
 func (c *Character) SetPassives() {
 	c.PassiveInvestigation = 10 + c.GetSkillBonus("investigation")
 	c.PassivePerception = 10 + c.GetSkillBonus("perception")
 	c.PassiveInsight = 10 + c.GetSkillBonus("insight")
 }
+
+*/
 
 // NewCharacter Method to create a new character with default properties.
 //
@@ -561,6 +586,7 @@ func NewCharacter(
 		CharacterSubClass:            implementedSubclass,
 		HitDice:                      hd,
 		HitPointBonuses:              make(map[string]int),
+		TemporaryHitPoints:           0,
 		ProficiencyBonusBonus:        make(map[string]AbilitySkillBonus),
 		MovementBase:                 Movement(float64(lineage.Speed)),
 		MovementBonus:                InitMovementBonus(),
@@ -575,7 +601,8 @@ func NewCharacter(
 	character.SetAbilitySkills()
 	character.SetAbilitySaveModifiers()
 	character.CalculateMovement()
-	character.SetPassives()
+	character.UpdateAllDependencies()
+	// character.SetPassives()
 	character.InitHitPoints()
 
 	return character, nil
@@ -631,6 +658,7 @@ func (c *Character) PrintDetails() {
 
 	fmt.Printf("Max Hit Points: %d\n", c.MaxHitPoints)
 	fmt.Printf("Current Hit Points: %d\n", c.CurrentHitPoints)
+	fmt.Printf("Total Hit Points: %d\n", c.GetTotalHitPoints())
 	for x := range c.Talents {
 		fmt.Printf("Talent: %s\n", c.Talents[x].Name)
 		// fmt.Printf("  Prerequisite: %s\n", c.Talents[x].Prerequisite)
