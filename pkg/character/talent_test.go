@@ -32,7 +32,7 @@ func TestSkillBonusTalent(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter(
 		"Test Mage", 3, "Wizard", "battle mage",
-		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"human", Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", "Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
@@ -76,7 +76,7 @@ func TestFlatBonusTalent(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter(
 		"Test Fighter", 1, "Fighter", "weapon master",
-		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"human", Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", "Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
@@ -120,7 +120,7 @@ func TestSpellSwapTalent(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard", "battle mage",
-		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"human", Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", "Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Error creating test character")

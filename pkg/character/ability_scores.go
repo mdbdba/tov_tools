@@ -156,7 +156,7 @@ func GetAbilityRollingOptions() (options []string) {
 //	  common = 4d6 drop lowest 1
 //	The rest of the options are set values defined in abilityRollingOptions
 func rollRawAbilitySlice(rollOption string,
-	logger *zap.SugaredLogger) (rollSlice []int, err error) {
+	logger *zap.SugaredLogger) (rollSlice []int, auditSlice []dice.Roll, err error) {
 	// %s is The number of seconds since the Epoch
 	nowStr := timefmt.Format(time.Now(), "%s")
 	var rnd string
@@ -179,6 +179,17 @@ func rollRawAbilitySlice(rollOption string,
 		}
 		//log the roll results, then harvest roll results
 		rollSlice = append(rollSlice, r.Result)
+		auditSlice = append(auditSlice, dice.Roll{
+			ID:             r.ID,
+			Options:        r.Options,
+			Sides:          r.Sides,
+			TimesToRoll:    r.TimesToRoll,
+			RollsGenerated: r.RollsGenerated,
+			RollsUsed:      r.RollsUsed,
+			AdditiveValue:  r.AdditiveValue,
+			Result:         r.Result,
+			CtxRef:         r.CtxRef,
+		})
 		//Log the results
 		logger.Infow("Roll", "Sides", r.Sides,
 			"TimesToRoll", r.TimesToRoll,
@@ -225,6 +236,17 @@ func GetPreGeneratedBaseAbilityArray(pre []int) (map[string]int, []string) {
 	return retObj, sortOrder
 }
 
+// ValidateRollingOption returns an error if the given rollingOption is not in abilityRollingOption keys
+func ValidateRollingOption(rollingOption string) error {
+	a := abilityRollingOptions()
+	for k := range a {
+		if k == rollingOption {
+			return nil
+		}
+	}
+	return fmt.Errorf("value passed for rollingOption, %s, is not correct", rollingOption)
+}
+
 // GetBaseAbilityArray returns a generated Base Ability array and the unsorted
 //
 //	values that went into it. The values are generated depending on the
@@ -232,31 +254,36 @@ func GetPreGeneratedBaseAbilityArray(pre []int) (map[string]int, []string) {
 //	abilities depends on a sorting order provided by the sortSlice and
 //	a rolling option.
 func GetBaseAbilityArray(sortOrder []string, rollingOption string,
-	logger *zap.SugaredLogger) (r map[string]int, rawValueSlice []int, err error) {
+	logger *zap.SugaredLogger) (r map[string]int, rawValueSlice []int, auditSlice []dice.Roll, err error) {
 	r = AbilityArrayTemplate()
 	lu := abilityRollingOptions()
 	switch rollingOption {
 	case "common":
-		rawValueSlice, err = rollRawAbilitySlice(rollingOption, logger)
+		rawValueSlice, auditSlice, err = rollRawAbilitySlice(rollingOption, logger)
 		// fmt.Println(rawValueSlice)
 		if err != nil {
 			return
 		}
 	case "strict":
-		rawValueSlice, err = rollRawAbilitySlice(rollingOption, logger)
+		rawValueSlice, auditSlice, err = rollRawAbilitySlice(rollingOption, logger)
 		if err != nil {
 			return
 		}
 	case "standard":
 		rawValueSlice = lu["standard"]
+		auditSlice = make([]dice.Roll, 0)
 	case "pointbuy_even":
 		rawValueSlice = lu["pointbuy_even"]
+		auditSlice = make([]dice.Roll, 0)
 	case "pointbuy_onemax":
 		rawValueSlice = lu["pointbuy_onemax"]
+		auditSlice = make([]dice.Roll, 0)
 	case "pointbuy_twomax":
 		rawValueSlice = lu["pointbuy_twomax"]
+		auditSlice = make([]dice.Roll, 0)
 	case "pointbuy_threemax":
 		rawValueSlice = lu["pointbuy_threemax"]
+		auditSlice = make([]dice.Roll, 0)
 	}
 	for i := 0; i < len(sortOrder); i++ {
 		switch sortOrder[i] {
@@ -278,7 +305,7 @@ func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 		"rawValues", helpers.IntSliceToString(rawValueSlice),
 		"sortedValues", AbilityMapToString(r),
 	)
-	return r, rawValueSlice, err
+	return r, rawValueSlice, auditSlice, err
 }
 
 // AbilityArray is the struct that completely defines the Ability Array and
@@ -306,6 +333,7 @@ type AbilityArray struct {
 	Modifiers      map[string]int            `json:"modifiers"`
 	CtxRef         string                    `json:"ctx_ref"`
 	IsMonsterOrGod bool                      `json:"is_monster_or_god"`
+	AuditSlice     []dice.Roll               `json:"audit_slice"`
 }
 
 func GetPreGeneratedAbilityArray(Raw []int, BonusArray map[string]map[string]int,
@@ -324,6 +352,7 @@ func GetPreGeneratedAbilityArray(Raw []int, BonusArray map[string]map[string]int
 		Modifiers:      mods,
 		CtxRef:         CtxRef,
 		IsMonsterOrGod: IsMonsterOrGod,
+		AuditSlice:     make([]dice.Roll, 0),
 	}
 	a.setValuesAndModifiers()
 	return &a
@@ -350,7 +379,7 @@ func GetAbilityArray(RollingOption string,
 	CtxRef string,
 	IsMonsterOrGod bool,
 	logger *zap.SugaredLogger) (*AbilityArray, error) {
-	b, raw, err := GetBaseAbilityArray(SortOrder, RollingOption, logger)
+	b, raw, auditSlice, err := GetBaseAbilityArray(SortOrder, RollingOption, logger)
 	if err != nil {
 		return &AbilityArray{}, err
 	}
@@ -367,6 +396,7 @@ func GetAbilityArray(RollingOption string,
 		Modifiers:      mods,
 		CtxRef:         CtxRef,
 		IsMonsterOrGod: IsMonsterOrGod,
+		AuditSlice:     auditSlice,
 	}
 	a.setValuesAndModifiers()
 	logger.Infow("GetAbilityArray", zap.Object("AbilityArray", &a))

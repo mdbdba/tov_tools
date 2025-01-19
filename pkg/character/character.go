@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"tov_tools/pkg/dice"
+	"tov_tools/pkg/helpers"
 )
 
 var zapLogger *zap.SugaredLogger
@@ -176,6 +177,7 @@ type Character struct {
 	MaxHitPoints                 int
 	TemporaryHitPoints           int
 	CurrentHitPoints             int
+	HitPointAudit                []dice.Roll
 	InitiativeBonus              int
 	PassiveInvestigation         int
 	PassivePerception            int
@@ -211,15 +213,10 @@ func (c *Character) SetAbilitySaveModifiers() {
 		c.AbilitySaveModifiers[i] = c.GetAbilityModifier(i)
 		for _, proficiency := range Classes[c.CharacterClass].SaveProficiencies {
 			if i == proficiency {
-				// fmt.Printf("Proficiency: %s\n", proficiency)
-				// fmt.Printf("PB: %d\n", c.GetProficiencyBonus())
 				c.AbilitySaveModifiers[i] += c.GetProficiencyBonus()
 			}
 		}
 	}
-
-	// fmt.Printf("Ability Modifiers: %v\n", c.Abilities.Modifiers)
-	// fmt.Printf("Ability Save Modifiers: %v\n", c.AbilitySaveModifiers)
 }
 
 func (c *Character) IsProficientIn(skill string) bool {
@@ -392,19 +389,85 @@ func ValidateName(name string) error {
 	return nil
 }
 
+// ValidateSize checks if a chosen size is possible for a given Lineage
+func ValidateSize(size string, lineage Lineage) error {
+	if len(lineage.SizeOptions) == 1 {
+		if size == lineage.SizeOptions[0] {
+			return nil
+		} else {
+			return fmt.Errorf("size %s is not valid for %s", size, lineage.Name)
+		}
+	} else {
+		for _, s := range lineage.SizeOptions {
+			if s == size {
+				return nil
+			}
+		}
+		// didn't find it.
+		return fmt.Errorf("size %s is not valid for %s", size, lineage.Name)
+	}
+}
+
+// ValidateLevel makes sure that the level for the character is acceptable
+func ValidateLevel(level int) error {
+	if level < 1 {
+		return errors.New("level must be greater than 0")
+	}
+	if level > 20 {
+		return errors.New("level must be less than 21")
+	}
+	return nil
+}
+
 func (c *Character) GetTotalHitPoints() int {
 	return c.CurrentHitPoints + c.TemporaryHitPoints
 }
 
-func (c *Character) InitHitPoints() {
-	hitPoints := 0
-	sides := 0
-	c.TotalHitPointBonuses = 0
-
-	for i := range c.HitPointBonuses {
-		c.TotalHitPointBonuses += c.HitPointBonuses[i]
+func (c *Character) GetHitPointBonusTotal() int {
+	total := 0
+	for _, bonus := range c.HitPointBonuses {
+		total += bonus
 	}
-	Bonuses := c.Abilities.Modifiers["con"] + c.TotalHitPointBonuses
+	c.TotalHitPointBonuses = total + c.Abilities.Modifiers["con"]
+	return total
+}
+
+func (c *Character) AddHitPointsForLevel(nbrOfLevels int, sides int, startingLevel int) {
+	Bonuses := c.GetHitPointBonusTotal()
+	levelMessage := fmt.Sprintf("Character.AddHitPointsForLevel for levels %d through %d",
+		startingLevel,
+		(startingLevel-1)+nbrOfLevels)
+	if nbrOfLevels == 1 {
+		levelMessage = fmt.Sprintf("Character.AddHitPointsForLevel for level %d", startingLevel)
+	}
+	opts := []string{fmt.Sprintf("add %d", Bonuses*(nbrOfLevels))}
+	results, err := dice.Perform(sides, nbrOfLevels, levelMessage, opts...)
+	if err != nil {
+		panic(err)
+	}
+	c.MaxHitPoints += results.Result
+	c.CurrentHitPoints = c.MaxHitPoints
+	c.HitPointAudit = append(c.HitPointAudit, dice.Roll{
+		ID:             results.ID,
+		Options:        results.Options,
+		Sides:          results.Sides,
+		TimesToRoll:    results.TimesToRoll,
+		RollsGenerated: results.RollsGenerated,
+		AdditiveValue:  results.AdditiveValue,
+		Result:         results.Result,
+		RollsUsed:      results.RollsUsed,
+		CtxRef:         results.CtxRef,
+	})
+}
+
+func (c *Character) InitHitPoints() {
+	// hitPoints := 0
+	sides := 0
+
+	Bonuses := c.GetHitPointBonusTotal()
+
+	// c.HitPointAudit = []dice.Roll{}
+	levelCounter := 0
 
 	for i := range c.HitDice {
 		toRoll := c.HitDice[i].DiceType
@@ -423,24 +486,32 @@ func (c *Character) InitHitPoints() {
 			sides = 20
 		}
 		if i == 0 {
-			hitPoints += sides + Bonuses
-			if c.HitDice[i].Max > 1 {
-				results, err := dice.Perform(sides, c.HitDice[i].Max-1, "Character.InitHitPoints")
-				if err != nil {
-					panic(err)
-				}
-				hitPoints += results.Result + (Bonuses * (c.HitDice[i].Max - 1))
-			}
-		} else {
-			results, err := dice.Perform(sides, 1, "Character.InitHitPoints")
+			levelCounter += c.HitDice[i].Max
+			c.MaxHitPoints = sides + Bonuses
+			c.CurrentHitPoints = sides + Bonuses
+			tmpID, err := helpers.GenerateRandomString(13)
 			if err != nil {
 				panic(err)
 			}
-			hitPoints += results.Result + Bonuses
+			c.HitPointAudit = append(c.HitPointAudit, dice.Roll{
+				ID:             tmpID,
+				Options:        "",
+				Sides:          sides,
+				TimesToRoll:    1,
+				RollsGenerated: []int{sides},
+				AdditiveValue:  Bonuses,
+				Result:         sides + Bonuses,
+				RollsUsed:      []int{sides},
+				CtxRef:         "First Level Auto Populate",
+			})
+			if c.HitDice[i].Max > 1 {
+				c.AddHitPointsForLevel(c.HitDice[i].Max-1, sides, 2)
+			}
+		} else {
+			c.AddHitPointsForLevel(c.HitDice[i].Max, sides, levelCounter)
+			levelCounter += c.HitDice[i].Max
 		}
 	}
-	c.MaxHitPoints = hitPoints
-	c.CurrentHitPoints = hitPoints
 }
 
 func (c *Character) ModifyTemporaryHitPoints(amount int) {
@@ -452,15 +523,6 @@ func (c *Character) UpdateAllDependencies() {
 		c.UpdateDependencies(i)
 	}
 }
-
-/*
-func (c *Character) SetPassives() {
-	c.PassiveInvestigation = 10 + c.GetSkillBonus("investigation")
-	c.PassivePerception = 10 + c.GetSkillBonus("perception")
-	c.PassiveInsight = 10 + c.GetSkillBonus("insight")
-}
-
-*/
 
 // NewCharacter Method to create a new character with default properties.
 //
@@ -476,9 +538,9 @@ func (c *Character) SetPassives() {
 func NewCharacter(
 	name string,
 	level int,
-	characterClass string,
-	characterSubClass string,
-	lineage Lineage,
+	characterClassName string,
+	selectedSubclassName string,
+	lineageName string,
 	heritage Heritage,
 	chosenSize string,
 	rollingOption string,
@@ -490,20 +552,32 @@ func NewCharacter(
 
 	zapLogger = logger
 	useClass := Class{}
-
+	useLineage := Lineage{}
+	// useHeritage := Heritage{}
 	err := error(nil)
 
 	err = ValidateName(name)
 	if err != nil {
 		return nil, fmt.Errorf("name is invalid: %v", err)
 	}
+	err = ValidateLevel(level)
+	if err != nil {
+		return nil, fmt.Errorf("level is invalid: %v", err)
+	}
 
-	if characterClass != "" {
-		useClass, err = GetClassByName(characterClass)
+	if rollingOption == "" {
+		rollingOption = "standard"
+	} else {
+		err = ValidateRollingOption(rollingOption)
 		if err != nil {
-			fmt.Printf("Error getting class '%s': %v\n", characterClass, err)
-			fmt.Println("Using random selection instead.")
-			useClass = RandomClass()
+			return nil, fmt.Errorf("rolling option %s is invalid: %v", rollingOption, err)
+		}
+	}
+
+	if characterClassName != "" {
+		useClass, err = GetClassByName(characterClassName)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting class '%s': %v\n", characterClassName, err)
 		}
 	} else {
 		fmt.Println("No class specified. Using random selection instead.")
@@ -528,11 +602,11 @@ func NewCharacter(
 
 	selectedSubclass := Subclass{}
 	implementedSubclass := Subclass{}
-	subclass, err := useClass.GetSubclass(characterSubClass)
+	subclass, err := useClass.GetSubclass(selectedSubclassName)
 	if err != nil {
 		fmt.Printf("The %s subclass is not valid for the %s class. Ignoring.\n",
-			characterSubClass,
-			characterClass)
+			selectedSubclassName,
+			characterClassName)
 	} else {
 		selectedSubclass = subclass
 		if level >= 3 {
@@ -540,10 +614,25 @@ func NewCharacter(
 		}
 	}
 
-	testLineage := Lineage{}
-	if lineage.Name == testLineage.Name {
-		return nil, fmt.Errorf("The %s lineage is not valid.\n",
-			lineage.Name)
+	if lineageName != "" {
+		useLineage, err = GetLineageByName(lineageName)
+		if err != nil {
+			return nil, fmt.Errorf("The %s lineage is not valid.: %v\n", lineageName, err)
+		}
+	} else {
+		fmt.Println("No lineage specified. Using random selection instead.")
+		useLineage = RandomLineage()
+	}
+
+	if chosenSize != "" {
+		err = ValidateSize(chosenSize, useLineage)
+		if err != nil {
+			return nil, fmt.Errorf("The %s size is not valid for %s: %v\n",
+				chosenSize, useLineage.Name, err)
+		}
+	} else {
+		fmt.Println("No character size specified. Using random selection instead.")
+		chosenSize = RandomSize(useLineage)
 	}
 
 	for _, talent := range chosenTalents {
@@ -570,7 +659,7 @@ func NewCharacter(
 
 	hd := []HitDie{
 		{
-			SourceClass: characterClass,
+			SourceClass: characterClassName,
 			DiceType:    useClass.HitDie,
 			Max:         level,
 			Used:        0,
@@ -580,17 +669,18 @@ func NewCharacter(
 	character := &Character{
 		Name:                         name,
 		Level:                        level,
-		CharacterClass:               characterClass,
+		CharacterClass:               characterClassName,
 		CharacterClassBuildType:      classBuildInfo,
 		CharacterSubClassToImplement: selectedSubclass,
 		CharacterSubClass:            implementedSubclass,
 		HitDice:                      hd,
 		HitPointBonuses:              make(map[string]int),
+		HitPointAudit:                []dice.Roll{},
 		TemporaryHitPoints:           0,
 		ProficiencyBonusBonus:        make(map[string]AbilitySkillBonus),
-		MovementBase:                 Movement(float64(lineage.Speed)),
+		MovementBase:                 Movement(float64(useLineage.Speed)),
 		MovementBonus:                InitMovementBonus(),
-		Lineage:                      lineage,
+		Lineage:                      useLineage,
 		Heritage:                     heritage,
 		ChosenSize:                   chosenSize,
 		ChosenTraits:                 chosenTraits,
@@ -602,7 +692,6 @@ func NewCharacter(
 	character.SetAbilitySaveModifiers()
 	character.CalculateMovement()
 	character.UpdateAllDependencies()
-	// character.SetPassives()
 	character.InitHitPoints()
 
 	return character, nil
@@ -751,6 +840,10 @@ func (c *Character) PrintDetails() {
 		if value != "walking" {
 			fmt.Printf("    %s\n", outputSlice[value])
 		}
+	}
+	fmt.Printf("\nHit Point Audit:\n")
+	for _, value := range c.HitPointAudit {
+		fmt.Printf("%d %s\n", value.Result, value.CtxRef)
 	}
 
 }

@@ -78,7 +78,7 @@ func TestGetBaseAbilityArray(t *testing.T) {
 	rollingOption := "standard"
 
 	// When
-	actual, r, err := GetBaseAbilityArray(sortOrder, rollingOption, observedLoggerSugared)
+	actual, r, _, err := GetBaseAbilityArray(sortOrder, rollingOption, observedLoggerSugared)
 
 	// Then
 	assert.NoError(t, err)
@@ -105,7 +105,7 @@ func TestGetBaseAbilityArrayWithRolls(t *testing.T) {
 	rollingOption := "common"
 
 	// When
-	actual, r, err := GetBaseAbilityArray(sortOrder, rollingOption, observedLoggerSugared)
+	actual, r, _, err := GetBaseAbilityArray(sortOrder, rollingOption, observedLoggerSugared)
 
 	// Then
 	assert.Equal(t, nil, err)

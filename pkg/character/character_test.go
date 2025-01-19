@@ -10,34 +10,6 @@ import (
 	"tov_tools/pkg/helpers"
 )
 
-/*  Use NewCharacter!!
-// Helper function to create a character
-func createCharacter(name, lineageKey, size string, optionalTraits map[string]string) (Character, error) {
-	lineage, exists := Lineages[lineageKey]
-	if !exists {
-		return Character{}, fmt.Errorf("Lineage '%s' not found", lineageKey)
-	}
-
-	urbanHeritage := Heritage{
-		Name:               "Urban",
-		SkillProficiencies: []string{"Stealth", "Persuasion"},
-		Languages:          []string{"Common", "Elvish"},
-		CulturalTraits: map[string]string{
-			"City Navigation": "Bonus to find your way in big cities",
-		},
-	}
-
-	return Character{
-		Name:         name,
-		Lineage:      lineage,
-		Heritage:     urbanHeritage,
-		ChosenSize:   size,
-		ChosenTraits: optionalTraits,
-	}, nil
-}
-
-*/
-
 func TestCharacterCreation(t *testing.T) {
 
 	// Given
@@ -129,7 +101,7 @@ func TestCharacterCreation(t *testing.T) {
 		character, err := NewCharacter(
 			testLineage.name, 5, "Wizard",
 			"battle mage",
-			Lineages[testLineage.lineageKey], Heritage{},
+			testLineage.lineageKey, Heritage{},
 			Lineages[testLineage.lineageKey].SizeOptions[0], rollingOption,
 			testLineage.selectedTraits, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
@@ -195,8 +167,8 @@ func TestSetAbilitySkills(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard",
-		"battle mage", Lineages["human"],
-		Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"battle mage", "human",
+		Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	testCharacter.SkillProficiencies = []AbilitySkillProficiency{
@@ -294,7 +266,7 @@ func TestAbilityUpdateReflectsEverywhere(t *testing.T) {
 	ctxRef := "Character Update test"
 
 	c, err := NewCharacter("Test Fighter", 1, "Fighter", "weapon master",
-		Lineages["human"], Heritage{}, "medium", rollingOption, map[string]string{}, []string{},
+		"human", Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
@@ -338,13 +310,12 @@ func TestInvalidCharacterCreation(t *testing.T) {
 	}
 
 	for _, tc := range invalidLineageTests {
-		//_, err := createCharacter(tc.name, tc.lineageKey, "Huge", map[string]string{})
 		ctxRef := fmt.Sprintf("Character invalid lineage test: %s", tc.lineageKey)
 
 		_, err := NewCharacter(
 			"Test Wizard", 5, "Wizard",
 			"battle mage",
-			Lineages[tc.lineageKey], Heritage{},
+			tc.lineageKey, Heritage{},
 			"medium", rollingOption,
 			map[string]string{}, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
@@ -364,8 +335,8 @@ func TestCharacterWithNoTraits(t *testing.T) {
 	// Create a test character
 	character, err := NewCharacter(
 		"Mr NoTraits", 1, "ranger", "pack master",
-		Lineages["human"], Heritage{},
-		"medium", rollingOption,
+		"human", Heritage{},
+		"Medium", rollingOption,
 		map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 
@@ -391,11 +362,9 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 	for _, tc := range edgeCaseNames {
 		ctxRef := fmt.Sprintf("Character name edge case test: %s", tc.name)
 
-		// _, err := NewCharacter(tc.name, tc.lineageKey, "Medium", map[string]string{})
-		// attempt to create the character
 		_, err := NewCharacter(
 			tc.name, 1, "Wizard", "battle mage",
-			Lineages[tc.lineageKey], Heritage{},
+			tc.lineageKey, Heritage{},
 			Lineages[tc.lineageKey].SizeOptions[0], rollingOption,
 			map[string]string{}, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
@@ -415,20 +384,135 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 		lineageKey string
 		size       string
 	}{
-		{"bob", "human", "Small"},
+		{"bob", "human", "Tiny"},
 		{"sally", "human", "Huge"},
 	}
 	for _, tc := range edgeCaseSizes {
-		//_, err := createCharacter(tc.name, tc.lineageKey, tc.size, map[string]string{})
 		_, err := NewCharacter(
 			tc.name, 1, "Wizard",
 			"battle mage",
-			Lineages[tc.lineageKey], Heritage{},
+			tc.lineageKey, Heritage{},
 			tc.size, rollingOption,
 			map[string]string{}, []string{},
 			"Standard", "Character Size Edge Case", observedLoggerSugared)
-		if err != nil {
-			t.Errorf("Character creation failed for name '%s': %v", tc.name, err)
+		if err == nil {
+			t.Errorf("Character creation should have failed for name '%s' tested size: %s", tc.name, tc.size)
 		}
+		assert.Error(t, err, fmt.Sprintf("Expected error when creating %s character with invalid size", tc.lineageKey))
 	}
+}
+
+func TestInvalidInputsForNewCharacter(t *testing.T) {
+	observedZapCore, _ := observer.New(zap.InfoLevel)
+	observedLoggerSugared := zap.New(observedZapCore).Sugar()
+
+	// Define test cases for invalid inputs
+	invalidInputs := []struct {
+		testCase      string
+		name          string
+		level         int
+		class         string
+		size          string
+		rollingOption string
+		expectError   bool
+	}{
+		{"Negative Level", "TestInvalid", -1, "Wizard", "Medium", "standard", true},
+		{"Excessive Level", "TestInvalid", 101, "Wizard", "Medium", "standard", true},
+		{"Invalid Class", "TestInvalid", 5, "InvalidClass", "Medium", "standard", true},
+		{"Invalid Size", "TestInvalid", 5, "Wizard", "Giant", "standard", true},
+		{"Invalid Rolling Option", "TestInvalid", 5, "Wizard", "Medium", "invalidOption", true},
+		{"Empty Name", "", 5, "Wizard", "Medium", "standard", true},
+	}
+
+	for _, tc := range invalidInputs {
+		t.Run(tc.testCase, func(t *testing.T) {
+			ctxRef := "Invalid Inputs Test"
+			_, err := NewCharacter(
+				tc.name, tc.level, tc.class, "battle mage",
+				"human", Heritage{}, tc.size, tc.rollingOption, map[string]string{}, []string{},
+				"Standard", ctxRef, observedLoggerSugared)
+
+			if tc.expectError {
+				assert.Error(t, err, "Expected error for invalid input")
+			} else {
+				assert.NoError(t, err, "Unexpected error for valid input")
+			}
+		})
+	}
+}
+
+func TestHitPointGenerationAtCreation(t *testing.T) {
+	observedZapCore, _ := observer.New(zap.InfoLevel)
+	observedLoggerSugared := zap.New(observedZapCore).Sugar()
+
+	hitPointTests := []struct {
+		name     string
+		class    string
+		subClass string
+		level    int
+	}{
+		{"Level One Wizard", "wizard", "battle mage", 1},
+		{"Level Five Fighter", "fighter", "weapon master", 5},
+		{"Level Two Cleric", "cleric", "life domain", 2},
+		{"Level Three Rogue", "rogue", "enforcer", 3},
+		{"Level Ten Barbarian", "barbarian", "berserker", 10},
+		{"Level Twenty Ranger", "ranger", "hunter", 20},
+	}
+
+	for _, tc := range hitPointTests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctxRef := fmt.Sprintf("Hit Point Generation Test: %s", tc.name)
+
+			character, err := NewCharacter(
+				tc.name, tc.level, tc.class, tc.subClass,
+				"human", Heritage{}, "Medium", "standard", map[string]string{}, []string{},
+				"Standard", ctxRef, observedLoggerSugared)
+
+			if err != nil {
+				t.Fatalf("Error creating character %s: %v", tc.name, err)
+			}
+
+			assert.NotNil(t, character.HitPointAudit, "HitPointAudit should not be nil")
+			tmpTotal := 0
+			tmpRolls := 0
+			for _, v := range character.HitPointAudit {
+				// fmt.Printf("Rolls: %v, Result: %d Ctx: %s\n", len(v.RollsUsed), v.Result, v.CtxRef)
+				tmpTotal += v.Result
+				tmpRolls += len(v.RollsUsed)
+			}
+
+			assert.NoError(t, err, "Unexpected error for valid input")
+			assert.Equal(t, tmpTotal, character.MaxHitPoints, "Incorrect total HP calculation")
+			assert.Equal(t, tc.level, tmpRolls, "HP rolls should match level")
+		})
+	}
+}
+func TestTemporaryHitPoints(t *testing.T) {
+	observedZapCore, _ := observer.New(zap.InfoLevel)
+	observedLoggerSugared := zap.New(observedZapCore).Sugar()
+
+	// Create a character
+	ctxRef := "Temporary HP Test"
+	character, err := NewCharacter(
+		"Temp HP Tester", 4, "Warlock", "fiend",
+		"human", Heritage{}, "Small", "standard", map[string]string{}, []string{},
+		"Standard", ctxRef, observedLoggerSugared)
+	assert.NoError(t, err, "Unexpected error when creating character")
+
+	// Add temporary HP
+	tempHP := 10
+	character.ModifyTemporaryHitPoints(tempHP)
+
+	// Verify temporary HP
+	assert.Equal(t, tempHP, character.TemporaryHitPoints, "Temporary HP not added correctly")
+	assert.Equal(t, tempHP+character.MaxHitPoints, character.GetTotalHitPoints(), "Total HP not correct")
+
+	// Apply damage that exceeds temporary HP
+	// this is not implemented yet
+	// damage := 12
+	// character.ApplyDamage(damage)
+
+	// Verify remaining HP and temporary HP
+	// assert.Equal(t, tempHP-damage, character.HitPoints.Temp, "Temporary HP not reduced correctly")
+	// assert.Equal(t, initialHP, character.HitPoints.Total, "Regular HP should remain unchanged after temporary HP absorbs damage")
 }
