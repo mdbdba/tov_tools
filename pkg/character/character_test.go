@@ -507,12 +507,14 @@ func TestTemporaryHitPoints(t *testing.T) {
 	assert.Equal(t, tempHP, character.TemporaryHitPoints, "Temporary HP not added correctly")
 	assert.Equal(t, tempHP+character.MaxHitPoints, character.GetTotalHitPoints(), "Total HP not correct")
 
-	// Apply damage that exceeds temporary HP
-	// this is not implemented yet
-	// damage := 12
-	// character.ApplyDamage(damage)
-
+	damage := 10
+	character.Damage(damage, "bludgeoning")
+	// fmt.Printf("Starting HP: %d\n", character.DamageAudits[0].HitPointsBefore)
+	// fmt.Printf("Temp HP used: %d\n", character.DamageAudits[0].Adjustments["temporary hit points"])
+	// fmt.Printf("Base Amount: %d\n", character.DamageAudits[0].BaseAmount)
+	// fmt.Printf("Ending HP: %d\n", character.DamageAudits[0].HitPointsAfter)
+	// fmt.Printf("character HP: %d\n", character.CurrentHitPoints)
 	// Verify remaining HP and temporary HP
-	// assert.Equal(t, tempHP-damage, character.HitPoints.Temp, "Temporary HP not reduced correctly")
-	// assert.Equal(t, initialHP, character.HitPoints.Total, "Regular HP should remain unchanged after temporary HP absorbs damage")
+	assert.Equal(t, 0, character.TemporaryHitPoints, "Temporary HP not reduced correctly")
+	assert.Equal(t, character.DamageAudits[0].HitPointsBefore-10, character.GetTotalHitPoints(), "Regular HP should remain unchanged after temporary HP absorbs damage")
 }

@@ -99,6 +99,16 @@ type HitDie struct {
 	Used        int
 }
 
+type DamageAudit struct {
+	ID              string
+	DamageType      string
+	HitPointsBefore int
+	BaseAmount      int
+	Adjustments     map[string]int
+	TotalAmount     int
+	HitPointsAfter  int
+}
+
 type MovementValue struct {
 	Speed int
 }
@@ -161,6 +171,7 @@ type Character struct {
 	CharacterClassBuildType      ClassBuildType
 	CharacterSubClassToImplement Subclass // store subclass in case the pc is < 3rd level
 	CharacterSubClass            Subclass
+	DamageTypeAdjustments        map[string]string
 	HitDice                      []HitDie
 	Lineage                      Lineage
 	Heritage                     Heritage
@@ -192,6 +203,7 @@ type Character struct {
 	MovementBonus                map[string]map[string]MovementValue
 	TotalMovement                map[string]MovementValue
 	AbilitySkills                map[string]AbilitySkill
+	DamageAudits                 []DamageAudit
 }
 
 func (c *Character) CalculateMovement() {
@@ -514,6 +526,79 @@ func (c *Character) InitHitPoints() {
 	}
 }
 
+// adjustDamageForType returns an adjusted amount for a character based on the damage type
+func (c *Character) adjustDamageForType(data *DamageAudit) {
+	value, exists := c.DamageTypeAdjustments[data.DamageType]
+	if exists {
+
+		switch value {
+		case "vulnerable":
+			data.Adjustments[data.DamageType] = data.BaseAmount
+			data.TotalAmount = data.BaseAmount * 2
+		case "resistant":
+			data.Adjustments[data.DamageType] = (data.BaseAmount / 2) * -1
+			data.TotalAmount = data.BaseAmount / 2
+		case "immune":
+			data.Adjustments[data.DamageType] = data.BaseAmount * -1
+			data.TotalAmount = 0
+		default:
+			// No adjustment for normal damage
+		}
+	}
+}
+
+func (c *Character) Damage(amount int, damageType string) {
+	tmpID, err := helpers.GenerateRandomString(13)
+	if err != nil {
+		panic(err)
+	}
+
+	audit := DamageAudit{
+		ID:              tmpID,
+		DamageType:      damageType,
+		HitPointsBefore: c.GetTotalHitPoints(),
+		BaseAmount:      amount,
+		Adjustments:     make(map[string]int),
+		TotalAmount:     amount,
+	}
+
+	c.adjustDamageForType(&audit)
+	workingAmount := audit.TotalAmount
+	if audit.TotalAmount > 0 {
+		if c.TemporaryHitPoints >= workingAmount {
+			c.TemporaryHitPoints -= workingAmount
+			audit.Adjustments["temporary hit points"] = -workingAmount
+			audit.TotalAmount = 0
+			workingAmount = 0
+		} else if c.TemporaryHitPoints > 0 {
+			audit.Adjustments["temporary hit points"] = -c.TemporaryHitPoints
+			workingAmount -= c.TemporaryHitPoints
+			c.TemporaryHitPoints = 0
+			audit.TotalAmount = workingAmount
+		}
+	}
+
+	fmt.Printf("Damage: %d\n", workingAmount)
+
+	if workingAmount > 0 {
+
+		c.CurrentHitPoints -= workingAmount
+		if c.CurrentHitPoints <= 0 {
+			// Handle unconscious or death (not implemented here, but stub logic included)
+			if -c.CurrentHitPoints >= c.MaxHitPoints {
+				// TODO: Handle instant death (e.g. exceeds max HP)
+				fmt.Println("Character has suffered instant death!")
+			} else {
+				// TODO: Handle falling unconscious (e.g. set status effect)
+				fmt.Println("Character has fallen unconscious.")
+			}
+		}
+
+	}
+	audit.HitPointsAfter = c.GetTotalHitPoints()
+	c.DamageAudits = append(c.DamageAudits, audit)
+}
+
 func (c *Character) ModifyTemporaryHitPoints(amount int) {
 	c.TemporaryHitPoints += amount
 }
@@ -674,8 +759,10 @@ func NewCharacter(
 		CharacterSubClassToImplement: selectedSubclass,
 		CharacterSubClass:            implementedSubclass,
 		HitDice:                      hd,
+		DamageTypeAdjustments:        make(map[string]string),
 		HitPointBonuses:              make(map[string]int),
 		HitPointAudit:                []dice.Roll{},
+		DamageAudits:                 []DamageAudit{},
 		TemporaryHitPoints:           0,
 		ProficiencyBonusBonus:        make(map[string]AbilitySkillBonus),
 		MovementBase:                 Movement(float64(useLineage.Speed)),
