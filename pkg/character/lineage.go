@@ -16,12 +16,6 @@ type LineageNaturalAdaptationTraitDescriptions struct {
 	Traits  map[string]map[string]string
 }
 
-// TraitChoices represents the trait options and the number to select.
-type TraitChoices struct {
-	NumberToSelect int
-	Options        []string
-}
-
 // Lineage represents blood ties and hereditary traits
 type Lineage struct {
 	Name          string

@@ -76,6 +76,54 @@ var DependencyLookup = map[string]AbilityDependency{
 	},
 }
 
+// ConditionEffects returns a map of names describing
+// conditions that can happen to a character.
+var ConditionEffects = func() map[string][]string {
+	return map[string][]string{
+		"blinded": {"A blinded character can't see and automatically fails any ability check that requires sight.",
+			"Attack rolls against a blinded character have advantage, and a blinded creature's attack rolls have disadvantage."},
+		"charmed": {"A charmed creature can't attack the charmer or target the charmer with harmful abilities or magical effects.",
+			"The charmer has advantage on any ability check to interact socially with the charmed creature."},
+		"deafened":   {"A deafened character can't hear and automatically fails any ability check that requires hearing."},
+		"exhaustion": {"Measured in levels, a character's exhaustion level effects combine the higher the level, the greater the exhaustion."},
+		"frightened": {"A frightened character has disadvantage on ability checks and attack rolls while the source of its fear is within line of sight.",
+			"The character can't willingly move closer to the source of its fear."},
+		"grappled": {"A grappled creature's speed becomes 0, and it can't benefit from any bonus to its speed.",
+			"The condition ends if the grappler is incapacitated (see the condition incapacitated).",
+			"The condition also ends if an effect removes the grappled creature from the reach of the grappler or moves the grappler closer than 5 feet to the creature."},
+		"incapacitated": {"An incapacitated creature can't take actions or reactions."},
+		"invisible": {"An invisible creature is impossible to see without the aid of magic or a special sense. For the purpose of hiding, the creature is heavily obscured.",
+			"The character has advantage on Dexterity (Stealth) checks and can take the Hide action as a bonus action.",
+			"Attack rolls against an invisible creature have disadvantage, and an invisible creature's attack rolls have advantage"},
+		"paralyzed": {"A paralyzed character is incapacitated (see the condition incapacitated), can't move, or speak.",
+			"The character automatically fails Strength and Dexterity saves.",
+			"Attack rolls against a paralyzed character have advantage",
+			"Any attack that hits the character is a critical hit if the attacker is within 5 feet of the character."},
+		"petrified": {"A petrified character is transformed, along with any nonmagical object it is wearing or carrying, into a solid inanimate substance (usually stone). Its weight increases by a factor of ten, and it ceases aging.",
+			"The character is incapacitated, can't move, or speak.",
+			"Attack rolls against a petrified creature have advantage",
+			"The character automatically fails Strength and Dexterity saves.",
+			"The character has resistance to all damage.",
+			"The character is immune to poison and disease, although a poison or disease already in its system is suspended, not neutralized."},
+		"poisoned": {"A poisoned character has disadvantage on attack rolls and ability checks."},
+		"prone": {"A prone character's only movement options are to crawl, or to stand up. Standing up costs an amount of movement equal to half its speed and ends the condition.",
+			"The character has disadvantage on attack rolls",
+			"An attack roll against a prone creature has advantage if the attacker is within 5 feet of the creature. Otherwise, the attack roll has disadvantage."},
+		"restrained": {"A restrained character's speed becomes 0, and it can't benefit from any bonus to its speed.",
+			"Attack rolls against a restrained creature have advantage, and a restrained creature's attack rolls have disadvantage",
+			"The character has disadvantage on Dexterity saving throws."},
+		"stunned": {"A stunned character is incapacitated (see the condition incapacitated), can't move, and speak only faintly.",
+			"The character automatically fails Strength and Dexterity saves.",
+			"Attack rolls against a stunned creature have advantage"},
+		"surprised": {"A surprised character can't move or take an action on its first turn of combat, and it can't take a reaction until after its first turn ends."},
+		"unconscious": {"An unconscious character is incapacitated (see the condition incapacitated), can't move or speak, and is unaware of its surroundings.",
+			"The character drops whatever it's holding and falls prone.",
+			"The character automatically fails Strength and Dexterity saves.",
+			"Attack rolls against an unconscious character have advantage",
+			"Any attack that hits the character is a critical hit if the attacker is within 5 feet of the character."},
+	}
+}
+
 type AbilitySkillProficiency struct {
 	Skill  string
 	Source string

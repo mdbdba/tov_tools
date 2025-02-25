@@ -1,21 +1,14 @@
 package character
 
 import (
-	"fmt"
-	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type LanguageSuggestion struct {
-	LanguageType      string
-	Speakers          []string
-	SuggestedLanguage string
-	Script            string
-}
-
-// LanguageSuggestions returns a recommended languages by archetype
-var LanguageSuggestions = func() []LanguageSuggestion {
-	return []LanguageSuggestion{
-		LanguageSuggestion{
+func TestLanguageSuggestions(t *testing.T) {
+	expected := []LanguageSuggestion{
+		{
 			LanguageType:      "standard",
 			Speakers:          []string{"human"},
 			SuggestedLanguage: "Common",
@@ -112,11 +105,17 @@ var LanguageSuggestions = func() []LanguageSuggestion {
 			Script:            "Elvish",
 		},
 	}
+
+	// Execute the LanguageSuggestions function
+	actual := LanguageSuggestions()
+
+	// Compare the entire actual output with the expected output
+	assert.Equal(t, expected, actual)
+
 }
 
-// HeritageSuggestion returns a recommended heritages by lineage
-var HeritageSuggestion = func() map[string][]string {
-	return map[string][]string{
+func TestHeritageSuggestion(t *testing.T) {
+	expected := map[string][]string{
 		"Beastkin":  {"Slayer", "Wildlands"},
 		"Dwarf":     {"Fireforge", "Stone"},
 		"Elf":       {"Cloud", "Grove"},
@@ -126,25 +125,10 @@ var HeritageSuggestion = func() map[string][]string {
 		"Syderean":  {"Anointed", "Vexed"},
 		"Smallfolk": {"Cottage", "Salvager"},
 	}
-}
 
-// Heritage represents upbringing and cultural traits
-type Heritage struct {
-	Name                string
-	SkillProficiencies  []string // e.g., ["Stealth", "Arcana"]
-	LanguageDefaults    []string
-	LanguageSuggestions []string
-	LanguageChoices     TraitChoices
-	Languages           []string
-	CulturalTraits      map[string]string // e.g., "City Navigation": "Bonus to find your way in big cities"
-}
+	// Execute the HeritageSuggestion function
+	actual := HeritageSuggestion()
 
-// GetHeritageByName returns a Heritage by its name or an error if it doesn't exist
-func GetHeritageByName(name string) (Heritage, error) {
-	lowerName := strings.ToLower(name)
-	heritage, exists := Heritages[lowerName]
-	if !exists {
-		return Heritage{}, fmt.Errorf("lineage '%s' does not exist", name)
-	}
-	return heritage, nil
+	// Check if the expected and actual maps match
+	assert.Equal(t, expected, actual)
 }
