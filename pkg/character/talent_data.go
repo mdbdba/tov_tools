@@ -311,9 +311,11 @@ var Talents = map[string]Talent{
 		Name:     "Covert",
 		Category: "technical",
 		Prerequisite: func(c *Character) bool {
-			// TODO: implement Prerequisite
-			// proficiency in stealth, dex 13 or higher
-			return true
+			_, exists := c.SkillProficiencies["stealth"]
+			if exists && c.Abilities.Values["dex"] >= 13 {
+				return true
+			}
+			return false
 		},
 	},
 	"dungeoneer": {

@@ -1,9 +1,8 @@
 package character
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestLanguageSuggestions(t *testing.T) {

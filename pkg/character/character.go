@@ -211,6 +211,38 @@ var InitMovementBonus = func() map[string]map[string]MovementValue {
 	}
 }
 
+type VantageType string
+
+func (v VantageType) IsValid() bool {
+	switch v {
+	case ADV, DIS, NRM:
+		return true
+	}
+	return false
+}
+
+const (
+	ADV VantageType = "advantage"
+	DIS VantageType = "disadvantage"
+	NRM VantageType = "normal" // For straight rolls
+)
+
+// ConditionAdjustment ConditionAdjustments are for modifying rolls with
+// advantage or disadvantage that relate to the character's
+// condition.  Created to allow for anointed heritage to
+// give death save rolls advantage.
+type ConditionAdjustment struct {
+	Vantage VantageType
+	Source  string
+}
+
+type DeathSaveAudit struct {
+	SaveSuccess     bool
+	CriticalSuccess bool
+	CriticalFailure bool
+	RollData        dice.Roll
+}
+
 // Character represents a character in the game
 type Character struct {
 	Name                         string
@@ -242,8 +274,10 @@ type Character struct {
 	PassivePerception            int
 	PassiveInsight               int
 	Talents                      map[string]Talent
+	DeathSaves                   [3]int
+	DeathSaveAudits              []dice.Roll
 	SpellBook                    []string
-	SkillProficiencies           []AbilitySkillProficiency
+	SkillProficiencies           map[string]AbilitySkillProficiency
 	SkillBonus                   map[string]map[string]AbilitySkillBonus
 	ProficiencyBonusBonus        map[string]AbilitySkillBonus
 	TotalSkillModifiers          map[string]int
@@ -251,6 +285,7 @@ type Character struct {
 	MovementBonus                map[string]map[string]MovementValue
 	TotalMovement                map[string]MovementValue
 	AbilitySkills                map[string]AbilitySkill
+	ConditionAdjustments         map[string]ConditionAdjustment
 	DamageAudits                 []DamageAudit
 }
 
