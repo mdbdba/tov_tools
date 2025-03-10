@@ -17,93 +17,103 @@ func TestCharacterCreation(t *testing.T) {
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 	rollingOption := "standard"
 
-	lineageTests := []struct {
+	testTraits := []struct {
 		name               string
 		lineageKey         string
-		predefinedTraits   []string
-		selectedTraits     map[string]string
-		expectedLineageSrc string
-		expectedSize       string
+		heritageKey             string
+		lineagePredefinedTraits []string
+		lineageSelectedTraits map[string]string
+		lineageExpectedSrc  string
+		lineageExpectedSize string
 	}{
 		{
-			name:               "Fang",
-			lineageKey:         "beastkin",
-			expectedLineageSrc: "Players Guide, pg 105",
-			expectedSize:       "Medium",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["beastkin"].Traits),
-			selectedTraits: map[string]string{"Natural Adaptation": "Agile",
+			name:                    "Fang",
+			lineageKey:              "beastkin",
+			heritageKey:             "slayer",
+			lineageExpectedSrc:      "Players Guide, pg 105",
+			lineageExpectedSize:     "Medium",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["beastkin"].Traits),
+			lineageSelectedTraits: map[string]string{"Natural Adaptation": "Agile",
 				"Animal Instinct": "Perception",
 				"Natural Weapons": "Claws"},
 		},
 		{
-			name:               "Gimli",
-			lineageKey:         "dwarf",
-			expectedLineageSrc: "Players Guide, pg 106",
-			expectedSize:       "Medium",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["dwarf"].Traits),
-			selectedTraits:     map[string]string{},
+			name:                    "Gimli",
+			lineageKey:              "dwarf",
+			heritageKey:             "fireforge",
+			lineageExpectedSrc:      "Players Guide, pg 106",
+			lineageExpectedSize:     "Medium",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["dwarf"].Traits),
+			lineageSelectedTraits:   map[string]string{},
 		},
 		{
-			name:               "Legolas",
-			lineageKey:         "elf",
-			expectedLineageSrc: "Players Guide, pg 106",
-			expectedSize:       "Medium",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["elf"].Traits),
-			selectedTraits:     map[string]string{},
+			name:                    "Legolas",
+			lineageKey:              "elf",
+			heritageKey:             "cloud",
+			lineageExpectedSrc:      "Players Guide, pg 106",
+			lineageExpectedSize:     "Medium",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["elf"].Traits),
+			lineageSelectedTraits:   map[string]string{},
 		},
 		{
-			name:               "Aragorn",
-			lineageKey:         "human",
-			expectedLineageSrc: "Players Guide, pg 107",
-			expectedSize:       "Small", // Or "Small" based on specific test cases
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["human"].Traits),
-			selectedTraits:     map[string]string{},
+			name:                    "Aragorn",
+			lineageKey:              "human",
+			heritageKey:             "cosmopolitan",
+			lineageExpectedSrc:      "Players Guide, pg 107",
+			lineageExpectedSize:     "Small", // Or "Small" based on specific test cases
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["human"].Traits),
+			lineageSelectedTraits:   map[string]string{},
 		},
 		{
-			name:               "Tik",
-			lineageKey:         "kobold",
-			expectedLineageSrc: "Players Guide, pg 108",
-			expectedSize:       "Small",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["kobold"].Traits),
-			selectedTraits:     map[string]string{"Natural Adaptation": "Fierce (Small)"},
+			name:                    "Tik",
+			lineageKey:              "kobold",
+			heritageKey:             "salvager",
+			lineageExpectedSrc:      "Players Guide, pg 108",
+			lineageExpectedSize:     "Small",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["kobold"].Traits),
+			lineageSelectedTraits:   map[string]string{"Natural Adaptation": "Fierce (Small)"},
 		},
 		{
-			name:               "Rog",
-			lineageKey:         "orc",
-			expectedLineageSrc: "Players Guide, pg 108",
-			expectedSize:       "Medium",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["orc"].Traits),
-			selectedTraits:     map[string]string{},
+			name:                    "Rog",
+			lineageKey:              "orc",
+			heritageKey:             "diaspora",
+			lineageExpectedSrc:      "Players Guide, pg 108",
+			lineageExpectedSize:     "Medium",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["orc"].Traits),
+			lineageSelectedTraits:   map[string]string{},
 		},
 		{
-			name:               "Alien",
-			lineageKey:         "syderean",
-			expectedLineageSrc: "Players Guide, pg 109",
-			expectedSize:       "Medium",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["syderean"].Traits),
-			selectedTraits:     map[string]string{"Natural Adaptation": "Celestial"},
+			name:                    "Alien",
+			lineageKey:              "syderean",
+			heritageKey:             "anointed",
+			lineageExpectedSrc:      "Players Guide, pg 109",
+			lineageExpectedSize:     "Medium",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["syderean"].Traits),
+			lineageSelectedTraits:   map[string]string{"Natural Adaptation": "Celestial"},
 		},
 		{
-			name:               "Frodo",
-			lineageKey:         "smallfolk",
-			expectedLineageSrc: "Players Guide, pg 109",
-			expectedSize:       "Small",
-			predefinedTraits:   helpers.GetMapKeys(PredefinedTraitsData["smallfolk"].Traits),
-			selectedTraits:     map[string]string{"Natural Adaptation": "Halfling"},
+			name:                    "Frodo",
+			lineageKey:              "smallfolk",
+			heritageKey:             "cottage",
+			lineageExpectedSrc:      "Players Guide, pg 109",
+			lineageExpectedSize:     "Small",
+			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["smallfolk"].Traits),
+			lineageSelectedTraits:   map[string]string{"Natural Adaptation": "Halfling"},
 		},
 	}
 
-	for _, testLineage := range lineageTests {
-		//character, err := NewCharacter(testLineage.name, testLineage.lineageKey, testLineage.expectedSize, testLineage.selectedTraits)
+	for _, testCase := range testTraits {
+		//character, err := NewCharacter(testCase.name, testCase.lineageKey, testCase.lineageExpectedSize, testCase.lineageSelectedTraits)
 
-		ctxRef := fmt.Sprintf("Character lineage test: %s", testLineage.lineageKey)
+		ctxRef := fmt.Sprintf("Character lineage test: %s", testCase.lineageKey)
 		// Create a character to test against
+
 		character, err := NewCharacter(
-			testLineage.name, 5, "Wizard",
+			testCase.name, 5, "Wizard",
 			"battle mage",
-			testLineage.lineageKey, Heritage{},
-			Lineages[testLineage.lineageKey].SizeOptions[0], rollingOption,
-			testLineage.selectedTraits, []string{},
+			testCase.lineageKey, testCase.heritageKey,
+			Lineages[testCase.lineageKey].SizeOptions[0], rollingOption,
+			testCase.lineageSelectedTraits, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
 
 		if err != nil {
@@ -111,48 +121,48 @@ func TestCharacterCreation(t *testing.T) {
 		}
 
 		// Check character's name
-		if character.Name != testLineage.name {
-			t.Errorf("Expected name to be '%s', but got '%s'", testLineage.name, character.Name)
+		if character.Name != testCase.name {
+			t.Errorf("Expected name to be '%s', but got '%s'", testCase.name, character.Name)
 		}
 
 		// Check lineage
-		if character.Lineage.Name != helpers.ToTitleCase(testLineage.lineageKey) {
+		if character.Lineage.Name != helpers.ToTitleCase(testCase.lineageKey) {
 			t.Errorf("Expected lineage name to be '%s', but got '%s' for %s",
-				helpers.ToTitleCase(testLineage.lineageKey), character.Lineage.Name,
-				testLineage.name)
+				helpers.ToTitleCase(testCase.lineageKey), character.Lineage.Name,
+				testCase.name)
 		}
 
 		// Check lineage source
-		if character.Lineage.LineageSource != testLineage.expectedLineageSrc {
+		if character.Lineage.LineageSource != testCase.lineageExpectedSrc {
 			t.Errorf("Expected lineage source to be '%s', but got '%s' for %s",
-				testLineage.expectedLineageSrc, character.Lineage.LineageSource,
-				testLineage.name)
+				testCase.lineageExpectedSrc, character.Lineage.LineageSource,
+				testCase.name)
 		}
 
 		// Check chosen size
-		if character.ChosenSize != testLineage.expectedSize {
+		if character.ChosenSize != testCase.lineageExpectedSize {
 			t.Errorf("Expected chosen size to be '%s', but got '%s' for %s",
-				testLineage.expectedSize, character.ChosenSize,
-				testLineage.name)
+				testCase.lineageExpectedSize, character.ChosenSize,
+				testCase.name)
 		}
 
 		// Check predefined traits
 		if character.Lineage.Traits != nil {
-			for _, expectedValues := range testLineage.predefinedTraits {
+			for _, expectedValues := range testCase.lineagePredefinedTraits {
 				assert.Equal(t, true, helpers.Contains(character.Lineage.Traits, expectedValues))
 			}
 		}
 
 		// Check chosen traits
-		for traitKey, expectedValue := range testLineage.selectedTraits {
+		for traitKey, expectedValue := range testCase.lineageSelectedTraits {
 			actualValue, exists := character.ChosenTraits[traitKey]
 			fmt.Printf("Trait: %s, Expected: %s, Actual: %s\n", traitKey, expectedValue, actualValue)
 			if !exists {
 				t.Errorf("Expected chosen trait '%s' not found in character's traits for %s",
-					traitKey, testLineage.name)
+					traitKey, testCase.name)
 			} else if actualValue != expectedValue {
 				t.Errorf("Expected chosen trait '%s' to be '%s', but got '%s' for %s",
-					traitKey, expectedValue, actualValue, testLineage.name)
+					traitKey, expectedValue, actualValue, testCase.name)
 			}
 		}
 	}
@@ -168,11 +178,11 @@ func TestSetAbilitySkills(t *testing.T) {
 	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
-		Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
+		"nomadic", "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating test character")
-	testCharacter.SkillProficiencies = []AbilitySkillProficiency{
-		{Skill: "athletics", Source: "Training"},
+	testCharacter.SkillProficiencies = map[string]AbilitySkillProficiency{
+		"athletics": {Skill: "athletics", Source: "Training"},
 	}
 	testCharacter.SkillBonus = map[string]map[string]AbilitySkillBonus{
 		"athletics": {
@@ -266,7 +276,7 @@ func TestAbilityUpdateReflectsEverywhere(t *testing.T) {
 	ctxRef := "Character Update test"
 
 	c, err := NewCharacter("Test Fighter", 1, "Fighter", "weapon master",
-		"human", Heritage{}, "Medium", rollingOption, map[string]string{}, []string{},
+		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
@@ -315,7 +325,7 @@ func TestInvalidCharacterCreation(t *testing.T) {
 		_, err := NewCharacter(
 			"Test Wizard", 5, "Wizard",
 			"battle mage",
-			tc.lineageKey, Heritage{},
+			tc.lineageKey, "nomadic",
 			"medium", rollingOption,
 			map[string]string{}, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
@@ -335,7 +345,7 @@ func TestCharacterWithNoTraits(t *testing.T) {
 	// Create a test character
 	character, err := NewCharacter(
 		"Mr NoTraits", 1, "ranger", "pack master",
-		"human", Heritage{},
+		"human", "nomadic",
 		"Medium", rollingOption,
 		map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
@@ -353,10 +363,11 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 	edgeCaseNames := []struct {
 		name       string
 		lineageKey string
+		heritageKey string
 	}{
-		{"", "human"},
-		{"@InvalidName!", "dwarf"},
-		{"1234", "elf"},
+		{"", "human", "nomadic"},
+		{"@InvalidName!", "dwarf", "fireforge"},
+		{"1234", "elf", "grove"},
 	}
 
 	for _, tc := range edgeCaseNames {
@@ -364,7 +375,7 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 
 		_, err := NewCharacter(
 			tc.name, 1, "Wizard", "battle mage",
-			tc.lineageKey, Heritage{},
+			tc.lineageKey, tc.heritageKey,
 			Lineages[tc.lineageKey].SizeOptions[0], rollingOption,
 			map[string]string{}, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
@@ -382,16 +393,17 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 	edgeCaseSizes := []struct {
 		name       string
 		lineageKey string
+		heritageKey string
 		size       string
 	}{
-		{"bob", "human", "Tiny"},
-		{"sally", "human", "Huge"},
+		{"bob", "human", "nomadic", "Tiny"},
+		{"sally", "human", "nomadic", "Huge"},
 	}
 	for _, tc := range edgeCaseSizes {
 		_, err := NewCharacter(
 			tc.name, 1, "Wizard",
 			"battle mage",
-			tc.lineageKey, Heritage{},
+			tc.lineageKey, tc.heritageKey,
 			tc.size, rollingOption,
 			map[string]string{}, []string{},
 			"Standard", "Character Size Edge Case", observedLoggerSugared)
@@ -429,7 +441,7 @@ func TestInvalidInputsForNewCharacter(t *testing.T) {
 			ctxRef := "Invalid Inputs Test"
 			_, err := NewCharacter(
 				tc.name, tc.level, tc.class, "battle mage",
-				"human", Heritage{}, tc.size, tc.rollingOption, map[string]string{}, []string{},
+				"human", "nomadic", tc.size, tc.rollingOption, map[string]string{}, []string{},
 				"Standard", ctxRef, observedLoggerSugared)
 
 			if tc.expectError {
@@ -465,7 +477,7 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 
 			character, err := NewCharacter(
 				tc.name, tc.level, tc.class, tc.subClass,
-				"human", Heritage{}, "Medium", "standard", map[string]string{}, []string{},
+				"human", "nomadic", "Medium", "standard", map[string]string{}, []string{},
 				"Standard", ctxRef, observedLoggerSugared)
 
 			if err != nil {
@@ -490,12 +502,13 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 func TestTemporaryHitPoints(t *testing.T) {
 	observedZapCore, _ := observer.New(zap.InfoLevel)
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
+	
 
 	// Create a character
 	ctxRef := "Temporary HP Test"
 	character, err := NewCharacter(
 		"Temp HP Tester", 4, "Warlock", "fiend",
-		"human", Heritage{}, "Small", "standard", map[string]string{}, []string{},
+		"human", "cosmopolitan", "Small", "standard", map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating character")
 

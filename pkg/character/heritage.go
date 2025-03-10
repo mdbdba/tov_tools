@@ -12,6 +12,48 @@ type LanguageSuggestion struct {
 	Script            string
 }
 
+// Languages returns a map[string]string holding all language choices
+var Languages = func() map[string]string {
+	return map[string]string{
+		"Common":         "Spoken by most humanoids, commonly used for trade and communication.",
+		"Elvish":         "The language of the elves, characterized by its melodic tones.",
+		"Dwarvish":       "Spoken by dwarves, with a harsh and ancient tone.",
+		"Orcish":         "A guttural language spoken by orcs and related tribes.",
+		"Draconic":       "The ancient language of dragons, also used in magical writings.",
+		"Abyssal":        "The twisted tongue of demons and other chaotic fiends.",
+		"Infernal":       "A structured and precise language spoken by devils.",
+		"Celestial":      "The radiant language of celestials, beings of the upper planes.",
+		"Gnomish":        "Spoken by gnomes, filled with inventive and curious terms.",
+		"Halfling":       "The casual and friendly language spoken by halflings.",
+		"Sylvan":         "The ancient tongue of fey and forest creatures.",
+		"Giant":          "The booming and straightforward language of giants.",
+		"Machine Speech": "The language of machines, with a mysterious and unintelligible tone.",
+		"Primordial":     "The language of the elemental beings.",
+		"Undercommon":    "A secretive language used in the Underdark.",
+	}
+}
+
+// LanguageNames returns the names of available languages
+var LanguageNames = func(exceptions ...[]string) []string {
+	var names []string
+	exceptionMap := make(map[string]bool)
+
+	// Process exceptions if they are provided
+	if len(exceptions) > 0 && len(exceptions[0]) > 0 {
+		for _, ex := range exceptions[0] {
+			exceptionMap[ex] = true
+		}
+	}
+
+	// Iterate over the languages and exclude the ones in exceptionMap
+	for name := range Languages() {
+		if !exceptionMap[name] { // Only add if it's not in the exception list
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
 // LanguageSuggestions returns a recommended languages by archetype
 var LanguageSuggestions = func() []LanguageSuggestion {
 	return []LanguageSuggestion{
@@ -131,12 +173,11 @@ var HeritageSuggestion = func() map[string][]string {
 // Heritage represents upbringing and cultural traits
 type Heritage struct {
 	Name                string
-	SkillProficiencies  []string // e.g., ["Stealth", "Arcana"]
 	LanguageDefaults    []string
 	LanguageSuggestions []string
-	LanguageChoices     TraitChoices
-	Languages           []string
-	CulturalTraits      map[string]string // e.g., "City Navigation": "Bonus to find your way in big cities"
+	Traits              map[string]string // predefined
+	TraitOptions        map[string]TraitChoices
+	HeritageSource      string
 }
 
 // GetHeritageByName returns a Heritage by its name or an error if it doesn't exist

@@ -232,8 +232,9 @@ const (
 // condition.  Created to allow for anointed heritage to
 // give death save rolls advantage.
 type ConditionAdjustment struct {
-	Vantage VantageType
-	Source  string
+	Condition string      // deathSaves
+	Vantage   VantageType // advantage or disadvantage
+	Source    string      // what gave the advantage or disadvantage
 }
 
 type DeathSaveAudit struct {
@@ -255,6 +256,7 @@ type Character struct {
 	HitDice                      []HitDie
 	Lineage                      Lineage
 	Heritage                     Heritage
+	KnownLanguages        		 []string
 	Background                   string
 	ChosenSize                   string
 	ChosenTraits                 map[string]string
@@ -285,8 +287,16 @@ type Character struct {
 	MovementBonus                map[string]map[string]MovementValue
 	TotalMovement                map[string]MovementValue
 	AbilitySkills                map[string]AbilitySkill
-	ConditionAdjustments         map[string]ConditionAdjustment
+	ConditionAdjustments         map[string][]ConditionAdjustment
 	DamageAudits                 []DamageAudit
+}
+
+func (c *Character) SetConditionAdjustment(condition string, vantage VantageType, source string) {
+	c.ConditionAdjustments[condition] = append(c.ConditionAdjustments[condition], ConditionAdjustment{
+		Condition: condition,
+		Vantage:   vantage,
+		Source:    source,
+	})
 }
 
 func (c *Character) CalculateMovement() {
@@ -709,7 +719,7 @@ func NewCharacter(
 	characterClassName string,
 	selectedSubclassName string,
 	lineageName string,
-	heritage Heritage,
+	heritageName string,
 	chosenSize string,
 	rollingOption string,
 	chosenTraits map[string]string,
@@ -721,7 +731,7 @@ func NewCharacter(
 	zapLogger = logger
 	useClass := Class{}
 	useLineage := Lineage{}
-	// useHeritage := Heritage{}
+	useHeritage := Heritage{}
 	err := error(nil)
 
 	err = ValidateName(name)
@@ -782,15 +792,25 @@ func NewCharacter(
 		}
 	}
 
+
 	if lineageName != "" {
 		useLineage, err = GetLineageByName(lineageName)
 		if err != nil {
 			return nil, fmt.Errorf("The %s lineage is not valid.: %v\n", lineageName, err)
 		}
 	} else {
-		fmt.Println("No lineage specified. Using random selection instead.")
-		useLineage = RandomLineage()
+		return nil, fmt.Errorf("No lineage specified. ")
 	}
+
+	if heritageName != "" {
+		useHeritage, err = GetHeritageByName(lineageName)
+		if err != nil {
+			return nil, fmt.Errorf("The %s heritage is not valid.: %v\n", heritageName, err)
+		}
+	} else {
+		return nil, fmt.Errorf("No heritage specified. ")
+	}
+
 
 	if chosenSize != "" {
 		err = ValidateSize(chosenSize, useLineage)
@@ -834,6 +854,10 @@ func NewCharacter(
 		},
 	}
 
+	KnownLanguages := useHeritage.LanguageDefaults
+
+
+
 	character := &Character{
 		Name:                         name,
 		Level:                        level,
@@ -851,7 +875,8 @@ func NewCharacter(
 		MovementBase:                 Movement(float64(useLineage.Speed)),
 		MovementBonus:                InitMovementBonus(),
 		Lineage:                      useLineage,
-		Heritage:                     heritage,
+		KnownLanguages:               KnownLanguages,
+		Heritage:                     useHeritage,
 		ChosenSize:                   chosenSize,
 		ChosenTraits:                 chosenTraits,
 		Abilities:                    *a,
@@ -912,8 +937,9 @@ func (c *Character) PrintDetails() {
 	for traitType, trait := range c.ChosenTraits {
 		fmt.Printf("  %s: %s\n", traitType, trait)
 	}
-	fmt.Printf("Heritage: %s, Languages: %v, Cultural Trait: %s\n",
-		c.Heritage.Name, c.Heritage.Languages, c.Heritage.CulturalTraits)
+	fmt.Printf("Heritage: %s, Languages: %v,  StaticTraits: %s, ChoiceTraits: %s\n",
+		c.Heritage.Name, c.KnownLanguages, helpers.GetMapKeys(c.Heritage.Traits),
+		helpers.GetMapKeys(c.Heritage.TraitOptions))
 
 	fmt.Printf("Max Hit Points: %d\n", c.MaxHitPoints)
 	fmt.Printf("Current Hit Points: %d\n", c.CurrentHitPoints)
