@@ -11,7 +11,7 @@ var Heritages = map[string]Heritage{
 				"or interpret information about Celestials, Fiends, or creatures with the " +
 				"Outsider tag, you can make a skill check with advantage.",
 		},
-		TraitOptions: map[string]TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
 			"Languages": {
 				NumberToSelect: 2,
 				Options:        LanguageNames([]string{"Common"}),
@@ -29,7 +29,7 @@ var Heritages = map[string]Heritage{
 		Traits: map[string]string{
 			"World of Wonders": "You have proficiency in the Arcana skill.",
 		},
-		TraitOptions: map[string]TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
 			"Languages": {
 				NumberToSelect: 2,
 				Options:        LanguageNames([]string{"Common"}),
@@ -58,7 +58,7 @@ var Heritages = map[string]Heritage{
 				"familiar with, you can add your PB to the roll. If you have proficiency in a relevant skill or tool, " +
 				"double your PB for the roll.",
 		},
-		TraitOptions: map[string]TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
 			"Languages": {
 				NumberToSelect: 3,
 				Options:        LanguageNames([]string{"Common"}),
@@ -76,7 +76,7 @@ var Heritages = map[string]Heritage{
 				"you). Those creatures gain temporary HP equal to twice your PB. These temporary " +
 				"HP last until expended or until you complete your next long rest.",
 		},
-		TraitOptions: map[string]TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
 			"Languages": {
 				NumberToSelect: 1,
 				Options:        LanguageNames([]string{"Common"}),
@@ -97,7 +97,7 @@ var Heritages = map[string]Heritage{
 				"a save against becoming frightened, you and the ally have " +
 				"advantage on the save.",
 		},
-		TraitOptions: map[string]TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
 			"Languages": {
 				NumberToSelect: 1,
 				Options:        LanguageNames([]string{"Common"}),

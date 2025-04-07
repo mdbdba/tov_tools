@@ -50,7 +50,7 @@ var PredefinedTraitsData = map[string]LineagePreDefinedTraits{
 			"Otherworldly Form": "You have resistance to necrotic damage and the amount of time you survive without air, food, water, or sleep is double that of a typical character.",
 		},
 	},
-	// Add more predefined traits for other lineages as needed
+	// Add more predefined Traits for other lineages as needed
 }
 
 var LineageNaturalAdaptations = map[string]LineageNaturalAdaptationTraitDescriptions{
@@ -114,16 +114,16 @@ var Lineages = map[string]Lineage{
 		AgeDiceRolls: 1,
 		SizeOptions:  []string{"Medium", "Small"},
 		Speed:        30,
-		TraitOptions: map[string]TraitChoices{
-			"Animal Instinct": TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
+			"Animal Instinct": ChoiceOptions{
 				NumberToSelect: 1,
 				Options:        []string{"Perception", "Survival"},
 			},
-			"Natural Weapons": TraitChoices{
+			"Natural Weapons": ChoiceOptions{
 				NumberToSelect: 1,
 				Options:        []string{"Claws", "Horns", "Hooves", "Fangs", "Spines"},
 			},
-			"Natural Adaptation": TraitChoices{
+			"Natural Adaptation": ChoiceOptions{
 				NumberToSelect: 1,
 				Options:        helpers.GetMapKeys(LineageNaturalAdaptations["beastkin"].Traits),
 			},
@@ -168,8 +168,8 @@ var Lineages = map[string]Lineage{
 		SizeOptions:  []string{"Small"},
 		Speed:        30,
 		Traits:       helpers.GetMapKeys(PredefinedTraitsData["kobold"].Traits),
-		TraitOptions: map[string]TraitChoices{
-			"Natural Adaptation": TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
+			"Natural Adaptation": ChoiceOptions{
 				NumberToSelect: 1,
 				Options:        helpers.GetMapKeys(LineageNaturalAdaptations["kobold"].Traits),
 			},
@@ -193,8 +193,8 @@ var Lineages = map[string]Lineage{
 		AgeDiceRolls: 3,
 		SizeOptions:  []string{"Medium"},
 		Speed:        30,
-		TraitOptions: map[string]TraitChoices{
-			"Natural Adaptation": TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
+			"Natural Adaptation": ChoiceOptions{
 				NumberToSelect: 1,
 				Options:        helpers.GetMapKeys(LineageNaturalAdaptations["syderean"].Traits),
 			},
@@ -209,8 +209,8 @@ var Lineages = map[string]Lineage{
 		AgeDiceRolls: 4,
 		SizeOptions:  []string{"Small"},
 		Speed:        30,
-		TraitOptions: map[string]TraitChoices{
-			"Natural Adaptation": TraitChoices{
+		TraitOptions: map[string]ChoiceOptions{
+			"Natural Adaptation": ChoiceOptions{
 				NumberToSelect: 1,
 				Options:        helpers.GetMapKeys(LineageNaturalAdaptations["smallfolk"].Traits),
 			},

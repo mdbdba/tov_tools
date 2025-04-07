@@ -184,7 +184,7 @@ var Talents = map[string]Talent{
 		Category: "martial",
 		Prerequisite: func(c *Character) bool {
 			// character 4th level or higher
-			if c.Level >= 4 {
+			if c.OverallLevel >= 4 {
 				return true
 			}
 			return false
@@ -211,7 +211,7 @@ var Talents = map[string]Talent{
 		Category: "martial",
 		Prerequisite: func(c *Character) bool {
 			// character 4th level or higher
-			if c.Level >= 4 {
+			if c.OverallLevel >= 4 {
 				return true
 			}
 			return false
@@ -230,7 +230,7 @@ var Talents = map[string]Talent{
 		Category: "martial",
 		Prerequisite: func(c *Character) bool {
 			// character 4th level or higher
-			if c.Level >= 4 {
+			if c.OverallLevel >= 4 {
 				return true
 			}
 			return false
@@ -249,7 +249,7 @@ var Talents = map[string]Talent{
 		Category: "martial",
 		Prerequisite: func(c *Character) bool {
 			// character 4th level or higher
-			if c.Level >= 4 {
+			if c.OverallLevel >= 4 {
 				return true
 			}
 			return false
@@ -277,7 +277,7 @@ var Talents = map[string]Talent{
 		Category: "martial",
 		Prerequisite: func(c *Character) bool {
 			// str 15 or higher, level 4 or higher
-			if c.Abilities.Values["str"] >= 15 && c.Level >= 4 {
+			if c.Abilities.Values["str"] >= 15 && c.OverallLevel >= 4 {
 				return true
 			}
 			return false

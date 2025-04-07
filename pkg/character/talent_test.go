@@ -14,7 +14,7 @@ func TestSkillBonusTalent(t *testing.T) {
 		Category:    "magic",
 		Description: "Double your proficiency bonus for any ability check that uses the Arcana skill.",
 		Prerequisite: func(c *Character) bool {
-			return c.Level >= 3 // Requires Level 3+
+			return c.OverallLevel >= 3 // Requires OverallLevel 3+
 		},
 		Benefits: []Benefit{
 			&SkillBonusMultiplierBenefit{
@@ -60,7 +60,7 @@ func TestFlatBonusTalent(t *testing.T) {
 		Category:    "martial",
 		Description: "Gain a +2 bonus to Strength.",
 		Prerequisite: func(c *Character) bool {
-			return c.Level >= 1 // No significant restrictions
+			return c.OverallLevel >= 1 // No significant restrictions
 		},
 		Benefits: []Benefit{
 			&FlatBonusBenefit{
@@ -103,7 +103,7 @@ func TestSpellSwapTalent(t *testing.T) {
 		Description: "Swap the spell 'Firebolt' with 'Ray of Frost'.",
 		Prerequisite: func(c *Character) bool {
 			// Prerequisite: Wizard class, level >= 5
-			return c.CharacterClass == "Wizard" && c.Level >= 5
+			return c.CharacterClassStr == "Wizard" && c.OverallLevel >= 5
 		},
 		Benefits: []Benefit{
 			&SpellSwapBenefit{

@@ -1,7 +1,7 @@
 package character
 
-// TraitChoices represents the trait options and the number to select.
-type TraitChoices struct {
+// ChoiceOptions represents the trait options and the number to select.
+type ChoiceOptions struct {
 	NumberToSelect int
 	Options        []string
 }

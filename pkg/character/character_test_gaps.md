@@ -29,7 +29,7 @@ To compare your `Character` class to the tests and identify potential gaps, I an
 3. **Dynamic Property Validation**
     - No tests to validate dynamic updates to dependent fields after modifying various attributes in the character (beyond `TestAbilityUpdateReflectsEverywhere`). Examples include:
         - Updates to `Lineage` should affect lineage-based traits.
-        - Updates to `ChosenTraits` should propagate correctly across other derived properties in the character.
+        - Updates to `traits` should propagate correctly across other derived properties in the character.
 
 4. **Interaction Between User-Defined and Predefined Traits**
     - While `TestCharacterCreation` checks `predefinedTraits` and `chosenTraits`, there are no tests for edge cases involving conflicts between the two, such as:
@@ -57,7 +57,7 @@ To compare your `Character` class to the tests and identify potential gaps, I an
         - Using undefined keys in inputs (e.g., `selectedTraits` with unknown keys).
 
 9. **Interaction Between Components**
-    - Tests don’t directly validate interactions between components like `AbilitySkills`, `SkillProficiencies`, `Modifiers`, or `ChosenTraits` in terms of logical integrity. For example:
+    - Tests don’t directly validate interactions between components like `AbilitySkills`, `SkillProficiencies`, `Modifiers`, or `traits` in terms of logical integrity. For example:
         - Ensuring unattainable combinations of traits and bonuses are properly flagged as errors.
         - Prioritization and stacking of bonuses from multiple sources.
 

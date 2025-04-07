@@ -23,7 +23,7 @@ func TestGetClass(t *testing.T) {
 	assert.Equal(t, "Ranger", class.Name)
 	assert.Equal(t, "d10", class.HitDie)
 	assert.Equal(t, []string{"dex", "wis", "str", "con", "int", "cha"}, class.ClassBuildTypes["Standard"].AbilityScoreOrderPreference)
-	assert.Equal(t, []string{"dex", "wis"}, class.ClassBuildTypes["Standard"].KeyAbilities) // both str and dex are possible key abilities
+	assert.Equal(t, []string{"dex", "wis"}, class.ClassBuildTypes["Standard"].KeyAbilities) // both str and dex are possible key Abilities
 	assert.ElementsMatch(t, []string{"str", "dex"}, class.SaveProficiencies)
 	assert.ElementsMatch(t, []string{"light armor", "medium armor", "shields", "weapons"}, class.EquipmentProficiencies)
 

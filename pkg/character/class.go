@@ -19,7 +19,7 @@ type Subclass struct {
 	SpellcastingAbility SpellcastingAbilityType // Optional: Exists only if the subclass grants it
 }
 
-// SpellcastingAbilityType defines a custom type for allowed spellcasting abilities
+// SpellcastingAbilityType defines a custom type for allowed spellcasting Abilities
 type SpellcastingAbilityType string
 
 // Allowed spellcasting ability values
@@ -71,7 +71,7 @@ func (c *Class) GetSubclass(name string) (Subclass, error) {
 	return subclass, nil
 }
 
-// GetClass retrieves the Class for a given name
+// GetClass retrieves the Class for a given Name
 func GetClass(name string) (Class, error) {
 	class, exists := Classes[name]
 	if !exists {
@@ -80,7 +80,7 @@ func GetClass(name string) (Class, error) {
 	return class, nil
 }
 
-// GetClassByName returns a Class by its name or an error if it doesn't exist
+// GetClassByName returns a Class by its Name or an error if it doesn't exist
 func GetClassByName(name string) (Class, error) {
 	lowerName := strings.ToLower(name)
 	class, exists := Classes[lowerName]

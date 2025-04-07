@@ -4,8 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"reflect"
 	"regexp"
 	"sort"
+	"strings"
+	"time"
 	"tov_tools/pkg/dice"
 	"tov_tools/pkg/helpers"
 )
@@ -82,7 +85,7 @@ var ConditionEffects = func() map[string][]string {
 	return map[string][]string{
 		"blinded": {"A blinded character can't see and automatically fails any ability check that requires sight.",
 			"Attack rolls against a blinded character have advantage, and a blinded creature's attack rolls have disadvantage."},
-		"charmed": {"A charmed creature can't attack the charmer or target the charmer with harmful abilities or magical effects.",
+		"charmed": {"A charmed creature can't attack the charmer or target the charmer with harmful Abilities or magical effects.",
 			"The charmer has advantage on any ability check to interact socially with the charmed creature."},
 		"deafened":   {"A deafened character can't hear and automatically fails any ability check that requires hearing."},
 		"exhaustion": {"Measured in levels, a character's exhaustion level effects combine the higher the level, the greater the exhaustion."},
@@ -229,10 +232,10 @@ const (
 
 // ConditionAdjustment ConditionAdjustments are for modifying rolls with
 // advantage or disadvantage that relate to the character's
-// condition.  Created to allow for anointed heritage to
+// condition.  Created to allow for anointed Heritage to
 // give death save rolls advantage.
 type ConditionAdjustment struct {
-	Condition string      // deathSaves
+	Condition string      // DeathSaves
 	Vantage   VantageType // advantage or disadvantage
 	Source    string      // what gave the advantage or disadvantage
 }
@@ -244,50 +247,92 @@ type DeathSaveAudit struct {
 	RollData        dice.Roll
 }
 
+// AuditEntry represents a change to a character field
+type AuditEntry struct {
+	Field     string      // Name of the field that changed
+	OldValue  interface{} // Previous value
+	NewValue  interface{} // New value
+	Source    string      // What caused this change (e.g., "Level Up", "Background", "Item")
+	Timestamp time.Time   // When the change occurred
+}
+
 // Character represents a character in the game
 type Character struct {
+	ID                           string
 	Name                         string
-	Level                        int
-	CharacterClass               string
+	OverallLevel                 int
+	OverallLevelAudit            []AuditEntry
+	CharacterLevels              map[string]int
+	CharacterLevelsAudit         []AuditEntry
+	CharacterClassStr            string // if multiclassing this will be class 1/class 2/class 3/etc
 	CharacterClassBuildType      ClassBuildType
 	CharacterSubClassToImplement Subclass // store subclass in case the pc is < 3rd level
 	CharacterSubClass            Subclass
 	DamageTypeAdjustments        map[string]string
+	DamageTypeAdjustmentsAudit   []AuditEntry
 	HitDice                      []HitDie
+	HitDiceAudit                 []AuditEntry
 	Lineage                      Lineage
+	LineageChoices               map[string][]string
+	LineageChoicesAudit          []AuditEntry
 	Heritage                     Heritage
-	KnownLanguages        		 []string
-	Background                   string
-	ChosenSize                   string
-	ChosenTraits                 map[string]string
+	HeritageChoices              map[string][]string
+	HeritageChoicesAudit         []AuditEntry
+	KnownLanguages               []string
+	KnownLanguagesAudit          []AuditEntry
+	Background                   Background
+	BackgroundChoices            map[string][]string
+	BackgroundChoicesAudit       []AuditEntry
+	CharacterSize                string
+	CharacterSizeAudit           []AuditEntry
+	Traits                       map[string]string
+	TraitChoices                 map[string][]string
+	TraitChoicesAudit            []AuditEntry
 	BaseSkills                   map[string]int
 	BaseSkillBonus               map[string]int
+	BaseSkillBonusAudit          []AuditEntry
 	Abilities                    AbilityArray
 	AbilitySaveModifiers         map[string]int
+	AbilitySaveModifiersAudit    []AuditEntry
 	RollingOption                string
 	HitPointBonuses              map[string]int
+	HitPointBonusesAudit         []AuditEntry
 	TotalHitPointBonuses         int
+	TotalHitPointBonusAudit      []AuditEntry
 	MaxHitPoints                 int
+	MaxHitPointsAudit            []AuditEntry
 	TemporaryHitPoints           int
+	TemporaryHitPointsAudit      []AuditEntry
 	CurrentHitPoints             int
-	HitPointAudit                []dice.Roll
+	CurrentHitPointsAudit        []AuditEntry
 	InitiativeBonus              int
+	InitiativeBonusAudit         []AuditEntry
 	PassiveInvestigation         int
 	PassivePerception            int
 	PassiveInsight               int
 	Talents                      map[string]Talent
+	TalentsAudit                 []AuditEntry
+	TalentsChoices               map[string][]string
+	TalentsChoicesAudit          []AuditEntry
 	DeathSaves                   [3]int
-	DeathSaveAudits              []dice.Roll
+	DeathSavesAudit              []AuditEntry
 	SpellBook                    []string
+	SpellBookAudit               []AuditEntry
 	SkillProficiencies           map[string]AbilitySkillProficiency
+	SkillProficienciesAudit      []AuditEntry
 	SkillBonus                   map[string]map[string]AbilitySkillBonus
+	SkillBonusAudit              []AuditEntry
 	ProficiencyBonusBonus        map[string]AbilitySkillBonus
+	ProficiencyBonusBonusAudit   []AuditEntry
 	TotalSkillModifiers          map[string]int
 	MovementBase                 map[string]MovementValue
 	MovementBonus                map[string]map[string]MovementValue
+	MovementBonusAudit           []AuditEntry
 	TotalMovement                map[string]MovementValue
 	AbilitySkills                map[string]AbilitySkill
+	AbilitySkillsAudit           []AuditEntry
 	ConditionAdjustments         map[string][]ConditionAdjustment
+	ConditionAdjustmentsAudit    []AuditEntry
 	DamageAudits                 []DamageAudit
 }
 
@@ -314,14 +359,27 @@ func (c *Character) CalculateMovement() {
 
 func (c *Character) SetAbilitySaveModifiers() {
 	c.AbilitySaveModifiers = AbilityArrayTemplate()
+	// being able to multiclass means that we need to make sure
+	// proficiencies aren't duplicated and warn if they are.
+	proficiencies := map[string]bool{}
+	for _, h := range helpers.GetMapKeys(c.CharacterLevels) {
+		for _, val := range Classes[h].SaveProficiencies {
+			if _, ok := proficiencies[val]; ok {
+				fmt.Printf("Warning: %s has a duplicate proficiency %s\n", h, val)
+			} else {
+				proficiencies[val] = true
+			}
+		}
+	}
 	for i := range c.Abilities.Modifiers {
 		c.AbilitySaveModifiers[i] = c.GetAbilityModifier(i)
-		for _, proficiency := range Classes[c.CharacterClass].SaveProficiencies {
+		for _, proficiency := range helpers.GetMapKeys(proficiencies) {
 			if i == proficiency {
 				c.AbilitySaveModifiers[i] += c.GetProficiencyBonus()
 			}
 		}
 	}
+
 }
 
 func (c *Character) IsProficientIn(skill string) bool {
@@ -413,7 +471,7 @@ func (c *Character) SetAbilitySkills() {
 	}
 }
 
-func (c *Character) AddTalent(t Talent) error {
+func (c *Character) AddTalent(t Talent, source string) error {
 	// Check prerequisite
 	if !t.Prerequisite(c) {
 		return fmt.Errorf("character does not meet the prerequisites for talent: %s", t.Name)
@@ -424,12 +482,24 @@ func (c *Character) AddTalent(t Talent) error {
 			return fmt.Errorf("failed to apply benefit '%s': %v", benefit.Description(), err)
 		}
 	}
+	// Record audit before adding
+	audit := AuditEntry{
+		Field:     "Talents",
+		OldValue:  len(c.Talents),
+		NewValue:  len(c.Talents) + 1,
+		Source:    source,
+		Timestamp: time.Now(),
+	}
+
 	c.Talents[t.Name] = t
+	// Record the audit
+	c.TalentsAudit = append(c.TalentsAudit, audit)
+
 	return nil
 }
 
 func (c *Character) GetProficiencyBonus() int {
-	base := c.Level/4 + 2
+	base := c.OverallLevel/4 + 2
 	bonus := 0
 	for i := range c.ProficiencyBonusBonus {
 		bonus += c.ProficiencyBonusBonus[i].Bonus
@@ -470,12 +540,12 @@ func (c *Character) AddAbilityBonus(ability string, reason string, bonus int) {
 
 }
 
-// ValidateName checks if the name is not empty and does not contain invalid characters.
+// ValidateName checks if the Name is not empty and does not contain invalid characters.
 func ValidateName(name string) error {
 
-	// Ensure the name is not empty
+	// Ensure the Name is not empty
 	if name == "" {
-		return errors.New("name cannot be empty")
+		return errors.New("Name cannot be empty")
 	}
 
 	// Regular expression to match invalid characters
@@ -487,7 +557,7 @@ func ValidateName(name string) error {
 
 	// Check if any invalid character is found
 	if matched {
-		return errors.New("name contains invalid characters")
+		return errors.New("Name contains invalid characters")
 	}
 
 	// If no error found, return nil
@@ -550,19 +620,49 @@ func (c *Character) AddHitPointsForLevel(nbrOfLevels int, sides int, startingLev
 	if err != nil {
 		panic(err)
 	}
+	beforeCurrentHP := c.CurrentHitPoints
+	beforeMaxHP := c.MaxHitPoints
 	c.MaxHitPoints += results.Result
 	c.CurrentHitPoints = c.MaxHitPoints
-	c.HitPointAudit = append(c.HitPointAudit, dice.Roll{
-		ID:             results.ID,
-		Options:        results.Options,
-		Sides:          results.Sides,
-		TimesToRoll:    results.TimesToRoll,
-		RollsGenerated: results.RollsGenerated,
-		AdditiveValue:  results.AdditiveValue,
-		Result:         results.Result,
-		RollsUsed:      results.RollsUsed,
-		CtxRef:         results.CtxRef,
-	})
+	c.MaxHitPointsAudit = append(c.MaxHitPointsAudit,
+		AuditEntry{
+			Field:    "MaxHitPoints",
+			OldValue: beforeMaxHP,
+			NewValue: dice.Roll{
+				ID:             results.ID,
+				Options:        results.Options,
+				Sides:          results.Sides,
+				TimesToRoll:    results.TimesToRoll,
+				RollsGenerated: results.RollsGenerated,
+				AdditiveValue:  results.AdditiveValue,
+				Result:         results.Result,
+				RollsUsed:      results.RollsUsed,
+				CtxRef:         results.CtxRef,
+			},
+			Source:    "Character.AddHitPointsForLevel",
+			Timestamp: time.Now(),
+		},
+	)
+
+	c.CurrentHitPointsAudit = append(c.CurrentHitPointsAudit,
+		AuditEntry{
+			Field:    "CurrentHitPoints",
+			OldValue: beforeCurrentHP,
+			NewValue: dice.Roll{
+				ID:             results.ID,
+				Options:        results.Options,
+				Sides:          results.Sides,
+				TimesToRoll:    results.TimesToRoll,
+				RollsGenerated: results.RollsGenerated,
+				AdditiveValue:  results.AdditiveValue,
+				Result:         results.Result,
+				RollsUsed:      results.RollsUsed,
+				CtxRef:         results.CtxRef,
+			},
+			Source:    "Character.AddHitPointsForLevel",
+			Timestamp: time.Now(),
+		},
+	)
 }
 
 func (c *Character) InitHitPoints() {
@@ -571,7 +671,7 @@ func (c *Character) InitHitPoints() {
 
 	Bonuses := c.GetHitPointBonusTotal()
 
-	// c.HitPointAudit = []dice.Roll{}
+	// c.CurrentHitPointsAudit = []dice.Roll{}
 	levelCounter := 0
 
 	for i := range c.HitDice {
@@ -591,6 +691,7 @@ func (c *Character) InitHitPoints() {
 			sides = 20
 		}
 		if i == 0 {
+
 			levelCounter += c.HitDice[i].Max
 			c.MaxHitPoints = sides + Bonuses
 			c.CurrentHitPoints = sides + Bonuses
@@ -598,17 +699,24 @@ func (c *Character) InitHitPoints() {
 			if err != nil {
 				panic(err)
 			}
-			c.HitPointAudit = append(c.HitPointAudit, dice.Roll{
-				ID:             tmpID,
-				Options:        "",
-				Sides:          sides,
-				TimesToRoll:    1,
-				RollsGenerated: []int{sides},
-				AdditiveValue:  Bonuses,
-				Result:         sides + Bonuses,
-				RollsUsed:      []int{sides},
-				CtxRef:         "First Level Auto Populate",
-			})
+			c.CurrentHitPointsAudit = append(c.CurrentHitPointsAudit,
+				AuditEntry{
+					Field:    "CurrentHitPoints",
+					OldValue: 0,
+					NewValue: dice.Roll{
+						ID:             tmpID,
+						Options:        "",
+						Sides:          sides,
+						TimesToRoll:    1,
+						RollsGenerated: []int{sides},
+						AdditiveValue:  Bonuses,
+						Result:         sides + Bonuses,
+						RollsUsed:      []int{sides},
+						CtxRef:         "First OverallLevel Auto Populate",
+					},
+					Source:    "Character.InitHitPoints",
+					Timestamp: time.Now(),
+				})
 			if c.HitDice[i].Max > 1 {
 				c.AddHitPointsForLevel(c.HitDice[i].Max-1, sides, 2)
 			}
@@ -702,6 +810,118 @@ func (c *Character) UpdateAllDependencies() {
 	}
 }
 
+// AddClassLevel adds a level to a class and records the change
+func (c *Character) AddClassLevel(className string, source string) {
+	// Save old values
+	oldLevel := c.OverallLevel
+	oldClassLevel := c.CharacterLevels[className]
+
+	// Update the class level
+	c.CharacterLevels[className]++
+
+	// Recalculate total level
+	totalLevel := 0
+	for _, level := range c.CharacterLevels {
+		totalLevel += level
+	}
+	c.OverallLevel = totalLevel
+
+	// Record class level audit
+	classAudit := AuditEntry{
+		Field:     "Classes." + className,
+		OldValue:  oldClassLevel,
+		NewValue:  c.CharacterLevels[className],
+		Source:    source,
+		Timestamp: time.Now(),
+	}
+	c.CharacterLevelsAudit = append(c.CharacterLevelsAudit, classAudit)
+
+	// Record total level audit
+	levelAudit := AuditEntry{
+		Field:     "OverallLevel",
+		OldValue:  oldLevel,
+		NewValue:  c.OverallLevel,
+		Source:    source,
+		Timestamp: time.Now(),
+	}
+	c.OverallLevelAudit = append(c.OverallLevelAudit, levelAudit)
+
+	// Apply level-up benefits based on the new class level
+	// todo: implement this through the classes themselves instead of
+	//    writing this into the character class.
+	// c.applyLevelBenefits(className, c.Classes[className])
+}
+
+// GetFieldHistory returns the audit history for a specific field
+func (c *Character) GetFieldHistory(fieldName string) []AuditEntry {
+	// Construct the audit field Name
+	auditFieldName := fieldName + "Audit"
+
+	// Use reflection to get the audit field
+	v := reflect.ValueOf(c).Elem() // Get the Character struct value (dereference pointer)
+	auditField := v.FieldByName(auditFieldName)
+
+	// Check if the field exists
+	if !auditField.IsValid() {
+		return []AuditEntry{} // Return empty slice if field doesn't exist
+	}
+
+	// Convert the reflected value to []AuditEntry
+	if auditField.Type().String() == "[]character.AuditEntry" {
+		// Convert to interface then to concrete type
+		auditEntries := auditField.Interface().([]AuditEntry)
+		return auditEntries
+	}
+
+	// If we get here, the field exists but isn't the right type
+	return []AuditEntry{}
+}
+
+// updateWithAudit is a helper to update any field with an audit trail
+func (c *Character) updateWithAudit(
+	fieldName string,
+	oldValue interface{},
+	newValue interface{},
+	source string,
+	auditSlice *[]AuditEntry) {
+
+	// Create audit entry
+	audit := AuditEntry{
+		Field:     fieldName,
+		OldValue:  oldValue,
+		NewValue:  newValue,
+		Source:    source,
+		Timestamp: time.Now(),
+	}
+
+	// Append to the provided audit slice
+	*auditSlice = append(*auditSlice, audit)
+}
+
+// InitializeAuditFields initializes all audit fields using reflection
+func (c *Character) InitializeAuditFields() {
+	v := reflect.ValueOf(c).Elem()
+	t := v.Type()
+
+	// Iterate through all fields
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fieldValue := v.Field(i)
+
+		// Check if this is an audit field (ends with "Audit")
+		if strings.HasSuffix(field.Name, "Audit") && fieldValue.Kind() == reflect.Slice {
+			// Make sure the field is exported (starts with uppercase)
+			if field.Name[0] >= 'A' && field.Name[0] <= 'Z' {
+				// Create a new empty slice of the appropriate type
+				newSlice := reflect.MakeSlice(field.Type, 0, 0)
+
+				// Set the field value to the new empty slice
+				fieldValue.Set(newSlice)
+			}
+		}
+	}
+}
+
 // NewCharacter Method to create a new character with default properties.
 //
 //	rollingOptions:
@@ -736,7 +956,7 @@ func NewCharacter(
 
 	err = ValidateName(name)
 	if err != nil {
-		return nil, fmt.Errorf("name is invalid: %v", err)
+		return nil, fmt.Errorf("Name is invalid: %v", err)
 	}
 	err = ValidateLevel(level)
 	if err != nil {
@@ -792,25 +1012,23 @@ func NewCharacter(
 		}
 	}
 
-
 	if lineageName != "" {
 		useLineage, err = GetLineageByName(lineageName)
 		if err != nil {
-			return nil, fmt.Errorf("The %s lineage is not valid.: %v\n", lineageName, err)
+			return nil, fmt.Errorf("The %s Lineage is not valid.: %v\n", lineageName, err)
 		}
 	} else {
-		return nil, fmt.Errorf("No lineage specified. ")
+		return nil, fmt.Errorf("No Lineage specified. ")
 	}
 
 	if heritageName != "" {
 		useHeritage, err = GetHeritageByName(lineageName)
 		if err != nil {
-			return nil, fmt.Errorf("The %s heritage is not valid.: %v\n", heritageName, err)
+			return nil, fmt.Errorf("The %s Heritage is not valid.: %v\n", heritageName, err)
 		}
 	} else {
-		return nil, fmt.Errorf("No heritage specified. ")
+		return nil, fmt.Errorf("No Heritage specified. ")
 	}
-
 
 	if chosenSize != "" {
 		err = ValidateSize(chosenSize, useLineage)
@@ -856,19 +1074,25 @@ func NewCharacter(
 
 	KnownLanguages := useHeritage.LanguageDefaults
 
-
+	// AuditEntry represents a change to a character field
+	type AuditEntry struct {
+		Field     string      // Name of the field that changed
+		OldValue  interface{} // Previous value
+		NewValue  interface{} // New value
+		Source    string      // What caused this change (e.g., "OverallLevel Up", "Background", "Item")
+		Timestamp time.Time   // When the change occurred
+	}
 
 	character := &Character{
 		Name:                         name,
-		Level:                        level,
-		CharacterClass:               characterClassName,
+		OverallLevel:                 level,
+		CharacterClassStr:            characterClassName,
 		CharacterClassBuildType:      classBuildInfo,
 		CharacterSubClassToImplement: selectedSubclass,
 		CharacterSubClass:            implementedSubclass,
 		HitDice:                      hd,
 		DamageTypeAdjustments:        make(map[string]string),
 		HitPointBonuses:              make(map[string]int),
-		HitPointAudit:                []dice.Roll{},
 		DamageAudits:                 []DamageAudit{},
 		TemporaryHitPoints:           0,
 		ProficiencyBonusBonus:        make(map[string]AbilitySkillBonus),
@@ -877,12 +1101,12 @@ func NewCharacter(
 		Lineage:                      useLineage,
 		KnownLanguages:               KnownLanguages,
 		Heritage:                     useHeritage,
-		ChosenSize:                   chosenSize,
-		ChosenTraits:                 chosenTraits,
+		CharacterSize:                chosenSize,
+		Traits:                       chosenTraits,
 		Abilities:                    *a,
 		Talents:                      map[string]Talent{},
 	}
-
+	character.InitializeAuditFields()
 	character.SetAbilitySkills()
 	character.SetAbilitySaveModifiers()
 	character.CalculateMovement()
@@ -896,10 +1120,10 @@ func NewCharacter(
 func (c *Character) PrintDetails() {
 	abilityOrder := []string{"str", "dex", "con", "int", "wis", "cha"}
 	fmt.Printf("Character: %s\n", c.Name)
-	fmt.Printf("Class: %s\n", c.CharacterClass)
+	fmt.Printf("Class: %s\n", c.CharacterClassStr)
 	fmt.Printf("Subclass To Implement: %s\n", c.CharacterSubClassToImplement.Name)
 	fmt.Printf("Subclass: %s\n", c.CharacterSubClass.Name)
-	fmt.Printf("Level: %d\n", c.Level)
+	fmt.Printf("OverallLevel: %d\n", c.OverallLevel)
 	fmt.Printf("Proficiency Bonus: %d\n", c.GetProficiencyBonus())
 	fmt.Printf("Initiative Bonus: %d\n", c.InitiativeBonus)
 	fmt.Printf("Passive Insight: %d\n", c.PassiveInsight)
@@ -907,7 +1131,7 @@ func (c *Character) PrintDetails() {
 	fmt.Printf("Passive Perception: %d\n", c.PassivePerception)
 
 	fmt.Printf("Rolling Option Used: %s\n", c.RollingOption)
-	headerWidth := 4 // Length of the longest ability name (e.g., "cha") + padding
+	headerWidth := 4 // Length of the longest ability Name (e.g., "cha") + padding
 	valueWidth := 4  // Padding for consistent alignment
 	abilityHeaderStr := "            "
 	abilityValueStr := "Values     "
@@ -932,9 +1156,9 @@ func (c *Character) PrintDetails() {
 	fmt.Printf("Current Hit Points: %d\n", c.CurrentHitPoints)
 
 	c.Lineage.PrintDetails()
-	fmt.Printf("Chosen Size: %s\n", c.ChosenSize)
+	fmt.Printf("Chosen Size: %s\n", c.CharacterSize)
 	fmt.Println("Chosen Traits:")
-	for traitType, trait := range c.ChosenTraits {
+	for traitType, trait := range c.Traits {
 		fmt.Printf("  %s: %s\n", traitType, trait)
 	}
 	fmt.Printf("Heritage: %s, Languages: %v,  StaticTraits: %s, ChoiceTraits: %s\n",
@@ -1038,8 +1262,9 @@ func (c *Character) PrintDetails() {
 		}
 	}
 	fmt.Printf("\nHit Point Audit:\n")
-	for _, value := range c.HitPointAudit {
-		fmt.Printf("%d %s\n", value.Result, value.CtxRef)
+	for _, value := range c.CurrentHitPointsAudit {
+		fmt.Printf("%v %v %s\n", value.OldValue,
+			value.NewValue, value.Source)
 	}
 
 }

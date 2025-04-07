@@ -10,12 +10,12 @@ type Benefit interface {
 }
 
 type Talent struct {
-	Name         string                  // The name of the talent
+	Name         string                  // The Name of the talent
 	Category     string                  // magic, martial, or technical
 	Description  string                  // A description of what the talent represents or does
 	Prerequisite func(c *Character) bool // A function to check if a character meets the prerequisite
 	Benefits     []Benefit               // A list of benefits provided by the talent
-	// Source       string                  // What granted this talent, was it a specific background or a human getting
+	// Source       string                  // What granted this talent, was it a specific Background or a human getting
 	// an extra talent, etc.
 }
 

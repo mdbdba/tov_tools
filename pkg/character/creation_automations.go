@@ -12,7 +12,7 @@ func getRandomGen() *rand.Rand {
 	return randomGenerator
 }
 
-// RandomAge generates a random age for a character based on its lineage
+// RandomAge generates a random age for a character based on its Lineage
 func RandomAge(lineage Lineage) int {
 	randomGenerator := getRandomGen()
 	age := lineage.MaturityAge

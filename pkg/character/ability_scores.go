@@ -94,7 +94,7 @@ var abilityRollingOptions = func() map[string][]int {
 	}
 }
 
-// AbilityArrayTemplate is used to get a map with the abilities as keys
+// AbilityArrayTemplate is used to get a map with the Abilities as keys
 var AbilityArrayTemplate = func() map[string]int {
 	return map[string]int{
 		"str": 0,
@@ -236,7 +236,7 @@ func GetPreGeneratedBaseAbilityArray(pre []int) (map[string]int, []string) {
 	return retObj, sortOrder
 }
 
-// ValidateRollingOption returns an error if the given rollingOption is not in abilityRollingOption keys
+// ValidateRollingOption returns an error if the given RollingOption is not in abilityRollingOption keys
 func ValidateRollingOption(rollingOption string) error {
 	a := abilityRollingOptions()
 	for k := range a {
@@ -244,14 +244,14 @@ func ValidateRollingOption(rollingOption string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("value passed for rollingOption, %s, is not correct", rollingOption)
+	return fmt.Errorf("value passed for RollingOption, %s, is not correct", rollingOption)
 }
 
 // GetBaseAbilityArray returns a generated Base Ability array and the unsorted
 //
 //	values that went into it. The values are generated depending on the
-//	rollingOption passed (see abilityRollingOptions). How they are assigned to the
-//	abilities depends on a sorting order provided by the sortSlice and
+//	RollingOption passed (see abilityRollingOptions). How they are assigned to the
+//	Abilities depends on a sorting order provided by the sortSlice and
 //	a rolling option.
 func GetBaseAbilityArray(sortOrder []string, rollingOption string,
 	logger *zap.SugaredLogger) (r map[string]int, rawValueSlice []int, auditSlice []dice.Roll, err error) {
@@ -431,7 +431,7 @@ func (pa *AbilityArray) ToString() string {
 	return pa.ConvertToString(false)
 }
 
-// GetScore gets a single ability score from the array. Valid abilities are:
+// GetScore gets a single ability score from the array. Valid Abilities are:
 // Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma
 func (pa *AbilityArray) GetScore(ability string) (int, error) {
 	if ValidateAbilityName(ability) {
@@ -440,7 +440,7 @@ func (pa *AbilityArray) GetScore(ability string) (int, error) {
 	return -10, fmt.Errorf("value passed for ability, %s, is not correct", ability)
 }
 
-// GetModifier gets a single modifier from the array. Valid abilities are:
+// GetModifier gets a single modifier from the array. Valid Abilities are:
 // Strength, Dexterity, Constitution, Intelligence, Wisdom, and Charisma
 func (pa *AbilityArray) GetModifier(ability string) (int, error) {
 	if ValidateAbilityName(ability) {
@@ -503,7 +503,7 @@ func (pa *AbilityArray) AdjustBonuses(Ability string,
 
 }
 
-// AbilityMapToString converts a map keyed with the abilities to a single string.
+// AbilityMapToString converts a map keyed with the Abilities to a single string.
 func AbilityMapToString(src map[string]int) (tgt string) {
 	tgt = fmt.Sprintf("{\"Str\": %2d, \"Dex\": %2d, \"Con\": %2d, "+
 		"\"Int\": %2d, \"Wis\": %2d, \"Cha\": %2d}",
@@ -512,7 +512,7 @@ func AbilityMapToString(src map[string]int) (tgt string) {
 	return
 }
 
-// BonusArrayToString converts a map keyed with the abilities to a single string.
+// BonusArrayToString converts a map keyed with the Abilities to a single string.
 func BonusArrayToString(src map[string]map[string]int) string {
 	result := ""
 

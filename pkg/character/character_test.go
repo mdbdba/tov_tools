@@ -18,13 +18,13 @@ func TestCharacterCreation(t *testing.T) {
 	rollingOption := "standard"
 
 	testTraits := []struct {
-		name               string
-		lineageKey         string
+		name                    string
+		lineageKey              string
 		heritageKey             string
 		lineagePredefinedTraits []string
-		lineageSelectedTraits map[string]string
-		lineageExpectedSrc  string
-		lineageExpectedSize string
+		lineageSelectedTraits   map[string]string
+		lineageExpectedSrc      string
+		lineageExpectedSize     string
 	}{
 		{
 			name:                    "Fang",
@@ -103,9 +103,9 @@ func TestCharacterCreation(t *testing.T) {
 	}
 
 	for _, testCase := range testTraits {
-		//character, err := NewCharacter(testCase.name, testCase.lineageKey, testCase.lineageExpectedSize, testCase.lineageSelectedTraits)
+		//character, err := NewCharacter(testCase.Name, testCase.lineageKey, testCase.lineageExpectedSize, testCase.lineageSelectedTraits)
 
-		ctxRef := fmt.Sprintf("Character lineage test: %s", testCase.lineageKey)
+		ctxRef := fmt.Sprintf("Character Lineage test: %s", testCase.lineageKey)
 		// Create a character to test against
 
 		character, err := NewCharacter(
@@ -120,45 +120,45 @@ func TestCharacterCreation(t *testing.T) {
 			t.Fatalf("Error creating character: %v", err)
 		}
 
-		// Check character's name
+		// Check character's Name
 		if character.Name != testCase.name {
-			t.Errorf("Expected name to be '%s', but got '%s'", testCase.name, character.Name)
+			t.Errorf("Expected Name to be '%s', but got '%s'", testCase.name, character.Name)
 		}
 
-		// Check lineage
+		// Check Lineage
 		if character.Lineage.Name != helpers.ToTitleCase(testCase.lineageKey) {
-			t.Errorf("Expected lineage name to be '%s', but got '%s' for %s",
+			t.Errorf("Expected Lineage Name to be '%s', but got '%s' for %s",
 				helpers.ToTitleCase(testCase.lineageKey), character.Lineage.Name,
 				testCase.name)
 		}
 
-		// Check lineage source
+		// Check Lineage source
 		if character.Lineage.LineageSource != testCase.lineageExpectedSrc {
-			t.Errorf("Expected lineage source to be '%s', but got '%s' for %s",
+			t.Errorf("Expected Lineage source to be '%s', but got '%s' for %s",
 				testCase.lineageExpectedSrc, character.Lineage.LineageSource,
 				testCase.name)
 		}
 
 		// Check chosen size
-		if character.ChosenSize != testCase.lineageExpectedSize {
+		if character.CharacterSize != testCase.lineageExpectedSize {
 			t.Errorf("Expected chosen size to be '%s', but got '%s' for %s",
-				testCase.lineageExpectedSize, character.ChosenSize,
+				testCase.lineageExpectedSize, character.CharacterSize,
 				testCase.name)
 		}
 
-		// Check predefined traits
+		// Check predefined Traits
 		if character.Lineage.Traits != nil {
 			for _, expectedValues := range testCase.lineagePredefinedTraits {
 				assert.Equal(t, true, helpers.Contains(character.Lineage.Traits, expectedValues))
 			}
 		}
 
-		// Check chosen traits
+		// Check chosen Traits
 		for traitKey, expectedValue := range testCase.lineageSelectedTraits {
-			actualValue, exists := character.ChosenTraits[traitKey]
+			actualValue, exists := character.Traits[traitKey]
 			fmt.Printf("Trait: %s, Expected: %s, Actual: %s\n", traitKey, expectedValue, actualValue)
 			if !exists {
-				t.Errorf("Expected chosen trait '%s' not found in character's traits for %s",
+				t.Errorf("Expected chosen trait '%s' not found in character's Traits for %s",
 					traitKey, testCase.name)
 			} else if actualValue != expectedValue {
 				t.Errorf("Expected chosen trait '%s' to be '%s', but got '%s' for %s",
@@ -320,7 +320,7 @@ func TestInvalidCharacterCreation(t *testing.T) {
 	}
 
 	for _, tc := range invalidLineageTests {
-		ctxRef := fmt.Sprintf("Character invalid lineage test: %s", tc.lineageKey)
+		ctxRef := fmt.Sprintf("Character invalid Lineage test: %s", tc.lineageKey)
 
 		_, err := NewCharacter(
 			"Test Wizard", 5, "Wizard",
@@ -339,7 +339,7 @@ func TestCharacterWithNoTraits(t *testing.T) {
 	observedZapCore, _ := observer.New(zap.InfoLevel)
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 	rollingOption := "standard"
-	ctxRef := "Character no traits test"
+	ctxRef := "Character no Traits test"
 
 	//character, err := createCharacter("Lineless", "elf", "Medium", nil)
 	// Create a test character
@@ -350,8 +350,8 @@ func TestCharacterWithNoTraits(t *testing.T) {
 		map[string]string{}, []string{},
 		"Standard", ctxRef, observedLoggerSugared)
 
-	assert.NoError(t, err, "Unexpected error when creating character with no traits")
-	assert.Equal(t, 0, len(character.ChosenTraits), "Expected no chosen traits")
+	assert.NoError(t, err, "Unexpected error when creating character with no Traits")
+	assert.Equal(t, 0, len(character.Traits), "Expected no chosen Traits")
 }
 
 func TestCharacterWithEdgeCaseNames(t *testing.T) {
@@ -361,8 +361,8 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 	rollingOption := "standard"
 
 	edgeCaseNames := []struct {
-		name       string
-		lineageKey string
+		name        string
+		lineageKey  string
 		heritageKey string
 	}{
 		{"", "human", "nomadic"},
@@ -371,7 +371,7 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 	}
 
 	for _, tc := range edgeCaseNames {
-		ctxRef := fmt.Sprintf("Character name edge case test: %s", tc.name)
+		ctxRef := fmt.Sprintf("Character Name edge case test: %s", tc.name)
 
 		_, err := NewCharacter(
 			tc.name, 1, "Wizard", "battle mage",
@@ -380,7 +380,7 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 			map[string]string{}, []string{},
 			"Standard", ctxRef, observedLoggerSugared)
 
-		assert.Error(t, err, fmt.Sprintf("Expected error when creating %s character with invalid name", tc.lineageKey))
+		assert.Error(t, err, fmt.Sprintf("Expected error when creating %s character with invalid Name", tc.lineageKey))
 	}
 }
 
@@ -391,10 +391,10 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 	rollingOption := "standard"
 
 	edgeCaseSizes := []struct {
-		name       string
-		lineageKey string
+		name        string
+		lineageKey  string
 		heritageKey string
-		size       string
+		size        string
 	}{
 		{"bob", "human", "nomadic", "Tiny"},
 		{"sally", "human", "nomadic", "Huge"},
@@ -408,7 +408,7 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 			map[string]string{}, []string{},
 			"Standard", "Character Size Edge Case", observedLoggerSugared)
 		if err == nil {
-			t.Errorf("Character creation should have failed for name '%s' tested size: %s", tc.name, tc.size)
+			t.Errorf("Character creation should have failed for Name '%s' tested size: %s", tc.name, tc.size)
 		}
 		assert.Error(t, err, fmt.Sprintf("Expected error when creating %s character with invalid size", tc.lineageKey))
 	}
@@ -428,8 +428,8 @@ func TestInvalidInputsForNewCharacter(t *testing.T) {
 		rollingOption string
 		expectError   bool
 	}{
-		{"Negative Level", "TestInvalid", -1, "Wizard", "Medium", "standard", true},
-		{"Excessive Level", "TestInvalid", 101, "Wizard", "Medium", "standard", true},
+		{"Negative OverallLevel", "TestInvalid", -1, "Wizard", "Medium", "standard", true},
+		{"Excessive OverallLevel", "TestInvalid", 101, "Wizard", "Medium", "standard", true},
 		{"Invalid Class", "TestInvalid", 5, "InvalidClass", "Medium", "standard", true},
 		{"Invalid Size", "TestInvalid", 5, "Wizard", "Giant", "standard", true},
 		{"Invalid Rolling Option", "TestInvalid", 5, "Wizard", "Medium", "invalidOption", true},
@@ -463,12 +463,12 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 		subClass string
 		level    int
 	}{
-		{"Level One Wizard", "wizard", "battle mage", 1},
-		{"Level Five Fighter", "fighter", "weapon master", 5},
-		{"Level Two Cleric", "cleric", "life domain", 2},
-		{"Level Three Rogue", "rogue", "enforcer", 3},
-		{"Level Ten Barbarian", "barbarian", "berserker", 10},
-		{"Level Twenty Ranger", "ranger", "hunter", 20},
+		{"OverallLevel One Wizard", "wizard", "battle mage", 1},
+		{"OverallLevel Five Fighter", "fighter", "weapon master", 5},
+		{"OverallLevel Two Cleric", "cleric", "life domain", 2},
+		{"OverallLevel Three Rogue", "rogue", "enforcer", 3},
+		{"OverallLevel Ten Barbarian", "barbarian", "berserker", 10},
+		{"OverallLevel Twenty Ranger", "ranger", "hunter", 20},
 	}
 
 	for _, tc := range hitPointTests {
@@ -484,10 +484,10 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 				t.Fatalf("Error creating character %s: %v", tc.name, err)
 			}
 
-			assert.NotNil(t, character.HitPointAudit, "HitPointAudit should not be nil")
+			assert.NotNil(t, character.CurrentHitPointsAudit, "CurrentHitPointsAudit should not be nil")
 			tmpTotal := 0
 			tmpRolls := 0
-			for _, v := range character.HitPointAudit {
+			for _, v := range character.CurrentHitPointsAudit {
 				// fmt.Printf("Rolls: %v, Result: %d Ctx: %s\n", len(v.RollsUsed), v.Result, v.CtxRef)
 				tmpTotal += v.Result
 				tmpRolls += len(v.RollsUsed)
@@ -502,7 +502,6 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 func TestTemporaryHitPoints(t *testing.T) {
 	observedZapCore, _ := observer.New(zap.InfoLevel)
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
-	
 
 	// Create a character
 	ctxRef := "Temporary HP Test"

@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// LineagePreDefinedTraits holds descriptions for predefined traits of a lineage.
+// LineagePreDefinedTraits holds descriptions for predefined Traits of a Lineage.
 type LineagePreDefinedTraits struct {
 	Lineage string
 	Traits  map[string]string
@@ -16,7 +16,7 @@ type LineageNaturalAdaptationTraitDescriptions struct {
 	Traits  map[string]map[string]string
 }
 
-// Lineage represents blood ties and hereditary traits
+// Lineage represents blood ties and hereditary Traits
 type Lineage struct {
 	Name          string
 	MaturityAge   int // The age at which the character reaches maturity
@@ -25,21 +25,21 @@ type Lineage struct {
 	SizeOptions   []string
 	Speed         int
 	Traits        []string // Predefined
-	TraitOptions  map[string]TraitChoices
-	LineageSource string // Store where the lineage information came from
+	TraitOptions  map[string]ChoiceOptions
+	LineageSource string // Store where the Lineage information came from
 }
 
-// GetLineageByName returns a Lineage by its name or an error if it doesn't exist
+// GetLineageByName returns a Lineage by its Name or an error if it doesn't exist
 func GetLineageByName(name string) (Lineage, error) {
 	lowerName := strings.ToLower(name)
 	lineage, exists := Lineages[lowerName]
 	if !exists {
-		return Lineage{}, fmt.Errorf("lineage '%s' does not exist", name)
+		return Lineage{}, fmt.Errorf("Lineage '%s' does not exist", name)
 	}
 	return lineage, nil
 }
 
-// PrintDetails prints detailed information about the lineage
+// PrintDetails prints detailed information about the Lineage
 func (l *Lineage) PrintDetails() {
 	fmt.Printf("Lineage: %s\n", l.Name)
 	fmt.Printf("Source: %s\n", l.LineageSource)
