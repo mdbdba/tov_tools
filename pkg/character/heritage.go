@@ -172,12 +172,13 @@ var HeritageSuggestion = func() map[string][]string {
 
 // Heritage represents upbringing and cultural Traits
 type Heritage struct {
-	Name                string
-	LanguageDefaults    []string
-	LanguageSuggestions []string
-	Traits              map[string]string // predefined
-	TraitOptions        map[string]ChoiceOptions
-	HeritageSource      string
+	Name                   string
+	LanguageDefaults       []string
+	LanguageSuggestions    []string
+	LanguageSuggestionNote string
+	Traits                 map[string]string // predefined
+	TraitOptions           map[string]ChoiceOptions
+	HeritageSource         string
 }
 
 // GetHeritageByName returns a Heritage by its Name or an error if it doesn't exist
@@ -185,7 +186,7 @@ func GetHeritageByName(name string) (Heritage, error) {
 	lowerName := strings.ToLower(name)
 	heritage, exists := Heritages[lowerName]
 	if !exists {
-		return Heritage{}, fmt.Errorf("Lineage '%s' does not exist", name)
+		return Heritage{}, fmt.Errorf("heritage '%s' does not exist", name)
 	}
 	return heritage, nil
 }

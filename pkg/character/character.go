@@ -1022,7 +1022,7 @@ func NewCharacter(
 	}
 
 	if heritageName != "" {
-		useHeritage, err = GetHeritageByName(lineageName)
+		useHeritage, err = GetHeritageByName(heritageName)
 		if err != nil {
 			return nil, fmt.Errorf("The %s Heritage is not valid.: %v\n", heritageName, err)
 		}
@@ -1073,15 +1073,6 @@ func NewCharacter(
 	}
 
 	KnownLanguages := useHeritage.LanguageDefaults
-
-	// AuditEntry represents a change to a character field
-	type AuditEntry struct {
-		Field     string      // Name of the field that changed
-		OldValue  interface{} // Previous value
-		NewValue  interface{} // New value
-		Source    string      // What caused this change (e.g., "OverallLevel Up", "Background", "Item")
-		Timestamp time.Time   // When the change occurred
-	}
 
 	character := &Character{
 		Name:                         name,

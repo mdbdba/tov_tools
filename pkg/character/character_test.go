@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"testing"
+	"tov_tools/pkg/dice"
 	"tov_tools/pkg/helpers"
 )
 
@@ -488,9 +489,14 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 			tmpTotal := 0
 			tmpRolls := 0
 			for _, v := range character.CurrentHitPointsAudit {
-				// fmt.Printf("Rolls: %v, Result: %d Ctx: %s\n", len(v.RollsUsed), v.Result, v.CtxRef)
-				tmpTotal += v.Result
-				tmpRolls += len(v.RollsUsed)
+				if roll, ok := v.NewValue.(dice.Roll); ok {
+					// fmt.Printf("Rolls: %v, Result: %d Ctx: %s\n", len(v.RollsUsed), v.Result, v.CtxRef)
+					tmpTotal += roll.Result
+					tmpRolls += len(roll.RollsUsed)
+				} else {
+					fmt.Printf("Warning: NewValue is not a Roll struct: %T\n", v.NewValue)
+				}
+
 			}
 
 			assert.NoError(t, err, "Unexpected error for valid input")
