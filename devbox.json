@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.14.2/.schema/devbox.schema.json",
+  "packages": [
+    "go-task@3.43.3",
+    "bat@0.25.0",
+    "go@1.24.3",
+    "mdcat@2.7.1",
+    "kubectl@1.33.1",
+    "kubernetes-helm@3.17.3",
+    "golangci-lint@2.1.6"
+  ],
+  "env": {
+    "PATH": "$PATH:$PWD/bin"
+  },
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to tov_tools!'",
+      "mdcat README.md"
+    ]
+  }
+}
