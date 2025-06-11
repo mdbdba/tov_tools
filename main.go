@@ -10,15 +10,24 @@ import (
 
 func main() {
 	logger, _ := zap.NewProduction()
-	defer logger.Sync()
+	defer func(logger *zap.Logger) {
+		err := logger.Sync()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(logger)
 	zap.ReplaceGlobals(logger)
 
 	router := gin.New()
+	// gin.SetMode(gin.ReleaseMode)
 	router.Use(gin.Recovery(), middleware.ZapLogger())
+	
+	routes.RegisterStaticRoutes(router)
 
 	routes.RegisterDiceRoutes(router)
 	routes.RegisterCharacterRoutes(router)
 	routes.RegisterTableRoutes(router)
+	routes.RegisterHeritageRoutes(router)
 
 	log.Println("Server started at :8080")
 	log.Fatal(router.Run(":8080"))

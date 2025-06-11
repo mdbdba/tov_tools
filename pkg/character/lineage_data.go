@@ -218,5 +218,4 @@ var Lineages = map[string]Lineage{
 		Traits:        helpers.GetMapKeys(PredefinedTraitsData["smallfolk"].Traits),
 		LineageSource: "Players Guide, pg 109",
 	},
-	// Add more lineages here as needed
 }

@@ -275,14 +275,18 @@ type Character struct {
 	Lineage                      Lineage
 	LineageChoices               map[string][]string
 	LineageChoicesAudit          []AuditEntry
+	LineageInputRequired         bool
 	Heritage                     Heritage
 	HeritageChoices              map[string][]string
 	HeritageChoicesAudit         []AuditEntry
+	HeritageInputRequired        bool
 	KnownLanguages               []string
 	KnownLanguagesAudit          []AuditEntry
+	KnownLanguagesInputRequired  bool
 	Background                   Background
 	BackgroundChoices            map[string][]string
 	BackgroundChoicesAudit       []AuditEntry
+	BackgroundInputRequired      bool
 	CharacterSize                string
 	CharacterSizeAudit           []AuditEntry
 	Traits                       map[string]string
@@ -314,6 +318,7 @@ type Character struct {
 	TalentsAudit                 []AuditEntry
 	TalentsChoices               map[string][]string
 	TalentsChoicesAudit          []AuditEntry
+	TalentsInputRequired         bool
 	DeathSaves                   [3]int
 	DeathSavesAudit              []AuditEntry
 	SpellBook                    []string

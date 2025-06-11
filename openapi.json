@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Tales of the Valiant API",
-    "version": "1.0.0"
+    "version": "0.1.0"
   },
   "paths": {
     "/api/v1/dice/roll": {
@@ -112,6 +112,115 @@
         }
       }
     },
+    "/api/v1/heritages": {
+      "get": {
+        "summary": "Get all heritages",
+        "description": "Returns a list of all available heritage names",
+        "operationId": "getAllHeritages",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "heritages": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Anointed", "Cloud", "Cosmopolitan", "Cottage"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/heritages/{name}": {
+      "get": {
+        "summary": "Get heritage by name",
+        "description": "Returns detailed information about a specific heritage",
+        "operationId": "getHeritageByName",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Name of the heritage (case-insensitive)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Heritage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Heritage not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "heritage 'invalid' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/heritages/lineages": {
+      "get": {
+        "summary": "Get heritage suggestions by lineage",
+        "description": "Returns a map of lineages with their suggested heritages",
+        "operationId": "getHeritagesByLineage",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "lineages": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "example": {
+                        "Dwarf": ["Fireforge", "Stone"],
+                        "Elf": ["Cloud", "Grove"],
+                        "Human": ["Cosmopolitan", "Nomadic"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/table/get": {
       "get": {
         "summary": "Get table data",
@@ -167,6 +276,73 @@
                 }
               }
             }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Heritage": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "example": "Anointed"
+          },
+          "LanguageDefaults": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Common"]
+          },
+          "LanguageSuggestions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Abyssal", "Celestial", "Infernal"]
+          },
+          "LanguageSuggestionNote": {
+            "type": "string",
+            "example": "Typical anointed heritage characters choose an esoteric language aligned with their guiding power."
+          },
+          "Traits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "Favored Disciple": "You know the thaumaturgy cantrip and you have advantage on death saves.",
+              "Occult Studies": "When you make a check to recall or interpret information about Celestials, Fiends, or creatures with the Outsider tag, you can make a skill check with advantage."
+            }
+          },
+          "TraitOptions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceOptions"
+            }
+          },
+          "HeritageSource": {
+            "type": "string",
+            "example": "Players Guide, pg 112"
+          }
+        }
+      },
+      "ChoiceOptions": {
+        "type": "object",
+        "properties": {
+          "NumberToSelect": {
+            "type": "integer",
+            "example": 2
+          },
+          "Options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Elvish", "Dwarvish", "Orcish"]
           }
         }
       }
