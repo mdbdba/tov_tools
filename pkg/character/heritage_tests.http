@@ -41,7 +41,17 @@ GET http://{{host}}/{{apiPath}}/heritages/anointed
         }
         // Log the Traits object with pretty printing (indentation of 2 spaces)
         if (json.Traits) {
-            client.log("Traits object: " + JSON.stringify(json.Traits, null, 2));
+            // client.log("Traits object: " + JSON.stringify(json.Traits, null, 2));
+            client.log("--- TRAITS ---");
+            client.log("Trait Name | Description");
+            client.log("-----------|------------");
+            for (const [key, value] of Object.entries(json.Traits)) {
+                // Truncate long descriptions for better readability
+                const shortValue = value.length > 50 ? value.substring(0, 47) + "..." : value;
+                client.log(`${key} | ${shortValue}`);
+            }
+            client.log("-------------");
+
         }
 
     }
