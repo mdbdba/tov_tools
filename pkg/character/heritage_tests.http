@@ -1,0 +1,59 @@
+### Get All Heritages
+GET http://{{host}}/{{apiPath}}/heritages
+
+
+### Get Heritage by Name (Anointed)
+GET http://{{host}}/{{apiPath}}/heritages/anointed
+
+> {%
+    client.log("Response status: " + response.status);
+
+    // The response.body might already be an object
+    if (typeof response.body === 'object') {
+        client.log("Response is already an object");
+        var json = response.body;
+    } else {
+        client.log("Parsing response as JSON");
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+            client.log("Raw response body: " + response.body);
+        }
+    }
+
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    if (json) {
+
+        client.test("Response has correct heritage name", function() {
+            client.assert(json.Name === "Anointed", "Heritage name is not 'Anointed'");
+        });
+
+        client.test("Heritage has traits", function() {
+            client.assert(json.Traits && Object.keys(json.Traits).length > 0, "Heritage has no traits");
+        });
+
+        if (json.Name) {
+            client.log("Heritage name: " + json.Name);
+        }
+        // Log the Traits object with pretty printing (indentation of 2 spaces)
+        if (json.Traits) {
+            client.log("Traits object: " + JSON.stringify(json.Traits, null, 2));
+        }
+
+    }
+
+%}
+
+
+### Get Heritage by Name (Case-insensitive test)
+GET http://{{host}}/{{apiPath}}/heritages/AnOiNtEd
+
+### Get Heritage by Name (Non-existent - should return 404)
+GET http://{{host}}/{{apiPath}}/heritages/nonexistent
+
+### Get Heritage Suggestions by Lineage
+GET http://{{host}}/{{apiPath}}/heritages/lineages
