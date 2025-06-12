@@ -1,0 +1,186 @@
+### Get All Lineages
+GET http://{{host}}/{{apiPath}}/lineages
+
+
+### Get Lineage by Name (Dwarf)
+GET http://{{host}}/{{apiPath}}/lineages/dwarf
+
+> {%
+    client.log("Response status: " + response.status);
+
+    // The response.body might already be an object
+    if (typeof response.body === 'object') {
+        client.log("Response is already an object");
+        var json = response.body;
+    } else {
+        client.log("Parsing response as JSON");
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+            client.log("Raw response body: " + response.body);
+        }
+    }
+
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    if (json) {
+        client.test("Response has correct lineage name", function() {
+            client.assert(json.Name === "Dwarf", "Lineage name is not 'Dwarf'");
+        });
+
+        client.test("Lineage has traits", function() {
+            client.assert(json.Traits && Object.keys(json.Traits).length > 0, "Lineage has no traits");
+        });
+
+
+        if (json.Name) {
+            client.log("Lineage name: " + json.Name);
+        }
+
+        // Log the Traits object with pretty printing
+        if (json.Traits) {
+            client.log("--- TRAITS ---");
+            client.log("Trait Name | Description");
+            client.log("-----------|------------");
+            for (const [key, value] of Object.entries(json.Traits)) {
+                // Truncate long descriptions for better readability
+                const shortValue = value.length > 50 ? value.substring(0, 47) + "..." : value;
+                client.log(`${key} | ${shortValue}`);
+            }
+            client.log("-------------");
+        }
+    }
+%}
+
+
+### Get Lineage by Name (Human)
+GET http://{{host}}/{{apiPath}}/lineages/human
+
+### Get Lineage by Name (Case-insensitive test)
+GET http://{{host}}/{{apiPath}}/lineages/ElF
+
+### Get Lineage by Name (Non-existent - should return 404)
+GET http://{{host}}/{{apiPath}}/lineages/nonexistent
+
+### Heritage Suggestions Test - Get heritage suggestions for a lineage and verify the lineage has those heritages
+# First, get heritage suggestions by lineage
+GET http://{{host}}/{{apiPath}}/heritages/lineages
+
+> {%
+    client.log("Getting heritage suggestions by lineage...");
+    client.log("Response status: " + response.status);
+
+    // Parse response
+    if (typeof response.body === 'object') {
+        var suggestionJson = response.body;
+    } else {
+        try {
+            var suggestionJson = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    client.test("Heritage suggestions request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    // We'll use Dwarf as our test lineage
+    const testLineage = "Dwarf";
+
+    if (suggestionJson && suggestionJson.lineages && suggestionJson.lineages[testLineage]) {
+        // Store the expected heritages for this lineage for later comparison
+        var expectedHeritages = suggestionJson.lineages[testLineage];
+        client.log(`Found ${expectedHeritages.length} suggested heritages for ${testLineage}:`);
+        expectedHeritages.forEach(heritage => client.log(`- ${heritage}`));
+
+        // Save the expected heritages for the next request
+        client.global.set("expectedDwarfHeritages", JSON.stringify(expectedHeritages));
+    } else {
+        client.log(`No heritage suggestions found for ${testLineage}`);
+    }
+%}
+
+### Test Heritage Suggestions for Dwarf Lineage
+# This test verifies that the heritage suggestions endpoint returns the expected heritages for Dwarf lineage
+GET http://{{host}}/{{apiPath}}/heritages/lineages
+
+> {%
+    client.log("Response status: " + response.status);
+
+    // Parse response
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+            client.log("Raw response body: " + response.body);
+        }
+    }
+
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    // We'll use Dwarf as our test lineage
+    const testLineage = "Dwarf";
+
+    client.test("Response includes lineages property", function() {
+        client.assert(json.lineages !== undefined, "Response does not include 'lineages' property");
+    });
+
+    if (json.lineages) {
+        client.test(`Response includes heritage suggestions for ${testLineage}`, function() {
+            client.assert(json.lineages[testLineage] !== undefined,
+                `No heritage suggestions found for ${testLineage}`);
+        });
+
+        if (json.lineages[testLineage]) {
+            const dwarfHeritages = json.lineages[testLineage];
+
+            client.test(`${testLineage} has at least one heritage suggestion`, function() {
+                client.assert(dwarfHeritages.length > 0,
+                    `${testLineage} has no heritage suggestions`);
+            });
+
+            // Expected heritages based on the HeritageSuggestion function in the code
+            const expectedHeritages = ["Fireforge", "Stone"];
+
+            client.test(`${testLineage} has expected heritage suggestions`, function() {
+                // Check if all expected heritages are present
+                let allFound = true;
+                let missingHeritages = [];
+
+                expectedHeritages.forEach(heritage => {
+                    if (!dwarfHeritages.includes(heritage)) {
+                        allFound = false;
+                        missingHeritages.push(heritage);
+                    }
+                });
+
+                client.assert(allFound,
+                    `Missing expected heritages: ${missingHeritages.join(", ")}`);
+
+                // Check if there are no unexpected heritages
+                let unexpectedHeritages = dwarfHeritages.filter(
+                    heritage => !expectedHeritages.includes(heritage)
+                );
+
+                client.assert(unexpectedHeritages.length === 0,
+                    `Unexpected heritages found: ${unexpectedHeritages.join(", ")}`);
+            });
+
+            client.log(`--- ${testLineage} HERITAGE SUGGESTIONS ---`);
+            dwarfHeritages.forEach(heritage => {
+                client.log(`- ${heritage}`);
+            });
+            client.log("----------------------------------");
+        }
+    }
+%}
+

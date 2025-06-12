@@ -221,6 +221,80 @@
         }
       }
     },
+    "/api/v1/lineages": {
+      "get": {
+        "summary": "Get all lineages",
+        "description": "Returns a list of all available lineage names",
+        "operationId": "getAllLineages",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "lineages": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Beastkin", "Dwarf", "Elf", "Human", "Kobold", "Orc", "Syderean", "Smallfolk"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/lineages/{name}": {
+      "get": {
+        "summary": "Get lineage by name",
+        "description": "Returns detailed information about a specific lineage",
+        "operationId": "getLineageByName",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Name of the lineage (case-insensitive)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lineage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Lineage not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "lineage 'invalid' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/table/get": {
       "get": {
         "summary": "Get table data",
@@ -330,6 +404,60 @@
           }
         }
       },
+      "Lineage": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "example": "Dwarf"
+          },
+          "SuggestedHeritages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Fireforge", "Stone"]
+          },
+          "AbilityScoreAdjustments": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "example": {
+              "con": 2,
+              "wis": 1
+            }
+          },
+          "Size": {
+            "type": "string",
+            "example": "Medium"
+          },
+          "BaseSpeed": {
+            "type": "integer",
+            "example": 25
+          },
+          "Traits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "Darkvision": "You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light.",
+              "Dwarven Resilience": "You have advantage on saving throws against poison, and you have resistance against poison damage."
+            }
+          },
+          "TraitOptions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceOptions"
+            }
+          },
+          "LineageSource": {
+            "type": "string",
+            "example": "Players Guide, pg 102"
+          }
+        }
+      },
       "ChoiceOptions": {
         "type": "object",
         "properties": {
@@ -349,3 +477,4 @@
     }
   }
 }
+

@@ -21,13 +21,14 @@ func main() {
 	router := gin.New()
 	// gin.SetMode(gin.ReleaseMode)
 	router.Use(gin.Recovery(), middleware.ZapLogger())
-	
+
 	routes.RegisterStaticRoutes(router)
 
 	routes.RegisterDiceRoutes(router)
 	routes.RegisterCharacterRoutes(router)
 	routes.RegisterTableRoutes(router)
 	routes.RegisterHeritageRoutes(router)
+	routes.RegisterLineageRoutes(router)
 
 	log.Println("Server started at :8080")
 	log.Fatal(router.Run(":8080"))
