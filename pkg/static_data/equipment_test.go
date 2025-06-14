@@ -1,6 +1,7 @@
 package static_data
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -208,5 +209,64 @@ func TestFindItem(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestEquipmentPackContentsExistInAdventuringGear(t *testing.T) {
+	// This test verifies that all items referenced in EquipmentPacks actually exist in AdventuringGear
+
+	missingItems := make(map[string][]string) // Map of pack name -> missing items
+
+	// Function to check if an item exists in any category of AdventuringGear
+	itemExists := func(itemName string) bool {
+		normalizedName := strings.ToLower(itemName)
+
+		// First try exact match with keys
+		for _, categoryItems := range AdventuringGear {
+			if _, exists := categoryItems[normalizedName]; exists {
+				return true
+			}
+		}
+
+		// If not found, try partial matches (some items might have slight name differences)
+		for _, categoryItems := range AdventuringGear {
+			for key := range categoryItems {
+				if strings.Contains(key, normalizedName) || strings.Contains(normalizedName, key) {
+					return true
+				}
+			}
+		}
+
+		return false
+	}
+
+	// Check each equipment pack
+	for packKey, pack := range EquipmentPacks {
+		var packMissingItems []string
+
+		// Check each item in the pack
+		for _, item := range pack.Contents {
+			if !itemExists(item.Name) {
+				packMissingItems = append(packMissingItems, fmt.Sprintf("%s (quantity: %d)",
+					item.Name, item.Quantity))
+			}
+		}
+
+		if len(packMissingItems) > 0 {
+			missingItems[packKey] = packMissingItems
+		}
+	}
+
+	// Report any missing items
+	if len(missingItems) > 0 {
+		errorMsg := "The following items in equipment packs are missing from AdventuringGear:\n"
+		for packName, items := range missingItems {
+			packInfo := EquipmentPacks[packName]
+			errorMsg += fmt.Sprintf("  %s (%s):\n", packInfo.Name, packName)
+			for _, item := range items {
+				errorMsg += fmt.Sprintf("    - %s\n", item)
+			}
+		}
+		t.Errorf(errorMsg)
 	}
 }
