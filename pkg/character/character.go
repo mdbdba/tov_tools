@@ -11,6 +11,7 @@ import (
 	"time"
 	"tov_tools/pkg/dice"
 	"tov_tools/pkg/helpers"
+	"tov_tools/pkg/static_data"
 )
 
 var zapLogger *zap.SugaredLogger
@@ -329,7 +330,11 @@ type Character struct {
 	SkillBonusAudit              []AuditEntry
 	ProficiencyBonusBonus        map[string]AbilitySkillBonus
 	ProficiencyBonusBonusAudit   []AuditEntry
+	Tools                        map[string]static_data.Tool
+	ToolsAudit                   []AuditEntry
 	TotalSkillModifiers          map[string]int
+	Equipment                    []string
+	EquipmentAudit               []AuditEntry
 	MovementBase                 map[string]MovementValue
 	MovementBonus                map[string]map[string]MovementValue
 	MovementBonusAudit           []AuditEntry

@@ -2,9 +2,9 @@ package character
 
 type Background struct {
 	name                         string
-	skillProficiencies           []string // predefined
-	skillProficiencyOptions      []ChoiceOptions
-	additionalProficiencies      []string // predefined
+	skillProficiencies           []string        // predefined
+	skillProficiencyOptions      []ChoiceOptions // choose x from c1, c2, ...
+	additionalProficiencies      []string        // predefined
 	additionalProficiencyOptions []ChoiceOptions
 	equipment                    []string // predefined
 	equipmentOptions             []ChoiceOptions
