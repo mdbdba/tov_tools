@@ -1,5 +1,7 @@
 package static_data
 
+import "sort"
+
 type ExampleTask struct {
 	Description string
 	DC          int
@@ -12,6 +14,15 @@ type Tool struct {
 	CraftItems          string
 	SpecialUses         map[string]string
 	ExampleTasks        []ExampleTask
+}
+
+func GetToolsetNames() []string {
+	var return_value []string
+	for key := range Tools {
+		return_value = append(return_value, key)
+	}
+	sort.Strings(return_value)
+	return return_value
 }
 
 var Tools = map[string]Tool{
