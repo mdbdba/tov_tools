@@ -1,0 +1,20 @@
+
+services:
+  pgs:
+    build: ./pgs
+    image: mdbdba/postgres:17.5
+    container_name: pgs
+    ports:
+      - "5777:5432"
+    networks:
+      - rpg
+    environment:
+     - POSTGRES_USER=postgres
+     - POSTGRES_PASSWORD_FILE=/db_pass
+     - POSTGRES_DB=rpg
+    volumes:
+     - ~/docker_data/pgs/data:/var/lib/postgresql/data
+
+networks:
+  rpg:
+    driver: bridge

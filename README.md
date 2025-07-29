@@ -1,4 +1,3 @@
-
 # Tales of the Valiant Game Tools
 
 A collection of tools and utilities for the Tales of the Valiant tabletop role-playing game.
@@ -31,15 +30,16 @@ Tools for retrieving game tables and reference information.
 
 The project provides a RESTful API with endpoints for:
 
-
 - Character creation tools: `/api/v1/character/create`
-- Dice rolling operations: `/api/v1/dice/roll` 
-- Static table lookup: `/api/v1/table/get` 
+- Dice rolling operations: `/api/v1/dice/roll`
+- Static table lookup: `/api/v1/table/get`
 - Lineage lookup: `/api/v1/lineages`
 - Lineage information: `/api/v1/lineages/:name`
 - Heritage lookup: `/api/v1/heritages`
 - Heritage information: `/api/v1/heritages/:name`
 - Heritage suggestions by lineage: `/api/v1/heritages/lineages`
+- Background lookup: `/api/v1/backgrounds`
+- Background information: `/api/v1/backgrounds/:name`
 
 Example HTTP requests are available in the project's HTTP client files.
 

@@ -32,7 +32,7 @@ type Lineage struct {
 // GetLineageByName returns a Lineage by its Name or an error if it doesn't exist
 func GetLineageByName(name string) (Lineage, error) {
 	lowerName := strings.ToLower(name)
-	fmt.Printf("Looking for lineage %s (lower: %s)\n", name, lowerName)
+	// fmt.Printf("Looking for lineage %s (lower: %s)\n", name, lowerName)
 	lineage, exists := Lineages[lowerName]
 	if !exists {
 		return Lineage{}, fmt.Errorf("Lineage '%s' does not exist", name)

@@ -29,6 +29,7 @@ func main() {
 	routes.RegisterTableRoutes(router)
 	routes.RegisterHeritageRoutes(router)
 	routes.RegisterLineageRoutes(router)
+	routes.RegisterBackgroundRoutes(router)
 
 	log.Println("Server started at :8080")
 	log.Fatal(router.Run(":8080"))

@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Tales of the Valiant API",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "paths": {
     "/api/v1/dice/roll": {
@@ -104,6 +104,80 @@
                     "lineage": { "type": "string" },
                     "heritage": { "type": "string" },
                     "class": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backgrounds": {
+      "get": {
+        "summary": "Get all backgrounds",
+        "description": "Returns a list of all available background names",
+        "operationId": "getAllBackgrounds",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "backgrounds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["Soldier", "Scholar", "Noble", "Artisan"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backgrounds/{name}": {
+      "get": {
+        "summary": "Get background by name",
+        "description": "Returns detailed information about a specific background",
+        "operationId": "getBackgroundByName",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Name of the background (case-insensitive)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Background"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Background not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "background 'invalid' does not exist"
+                    }
                   }
                 }
               }
@@ -357,6 +431,121 @@
   },
   "components": {
     "schemas": {
+      "Background": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "example": "Scholar"
+          },
+          "Description": {
+            "type": "string",
+            "example": "You have spent years studying in libraries, universities, or under the tutelage of a master."
+          },
+          "SkillProficiencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["History", "Arcana"]
+          },
+          "SkillProficiencyOptions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceOptions"
+            }
+          },
+          "AdditionalProficiencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Calligrapher's Supplies"]
+          },
+          "AdditionalProficiencyOptions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceOptions"
+            }
+          },
+          "Equipment": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "Name": {
+                  "type": "string"
+                },
+                "Quantity": {
+                  "type": "integer"
+                }
+              }
+            },
+            "example": [
+              {
+                "Name": "Book",
+                "Quantity": 3
+              },
+              {
+                "Name": "Ink Pen",
+                "Quantity": 1
+              }
+            ]
+          },
+          "Money": {
+            "type": "object",
+            "properties": {
+              "Gold": {
+                "type": "integer",
+                "example": 10
+              },
+              "Silver": {
+                "type": "integer",
+                "example": 0
+              },
+              "Copper": {
+                "type": "integer",
+                "example": 0
+              }
+            }
+          },
+          "EquipmentOptions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceOptions"
+            }
+          },
+          "TalentOptions": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChoiceOptions"
+            }
+          },
+          "Motivations": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "Adventuring": {
+                "1": "I want to recover a lost cultural artifact.",
+                "2": "I seek knowledge that can only be gained through field research."
+              },
+              "Secret": {
+                "1": "I was expelled from my university for a theory that challenged orthodoxy.",
+                "2": "I've discovered an ancient text that contains forbidden knowledge."
+              }
+            }
+          },
+          "BackgroundSource": {
+            "type": "string",
+            "example": "Players Guide, pg 135"
+          }
+        }
+      },
       "Heritage": {
         "type": "object",
         "properties": {
@@ -477,4 +666,3 @@
     }
   }
 }
-
