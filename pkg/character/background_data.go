@@ -401,7 +401,7 @@ var Backgrounds = map[string]Background{
 				Options:        []string{"Athletics", "Acrobatics", "Investigation", "Medicine"},
 			},
 		},
-		AdditionalProficiencies: []string{"vehicles land"},
+		AdditionalProficiencies: []string{"land vehicles"},
 		AdditionalProficiencyOptions: map[string]ChoiceOptions{
 			"equipment": {
 				NumberToSelect: 1,

@@ -485,10 +485,10 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 				t.Fatalf("Error creating character %s: %v", tc.name, err)
 			}
 
-			assert.NotNil(t, character.CurrentHitPointsAudit, "CurrentHitPointsAudit should not be nil")
+			assert.NotNil(t, character.History.Audits["CurrentHitPoints"], "CurrentHitPointsAudit should not be nil")
 			tmpTotal := 0
 			tmpRolls := 0
-			for _, v := range character.CurrentHitPointsAudit {
+			for _, v := range character.History.Audits["CurrentHitPoints"] {
 				if roll, ok := v.NewValue.(dice.Roll); ok {
 					// fmt.Printf("Rolls: %v, Result: %d Ctx: %s\n", len(v.RollsUsed), v.Result, v.CtxRef)
 					tmpTotal += roll.Result
@@ -534,5 +534,5 @@ func TestTemporaryHitPoints(t *testing.T) {
 	// fmt.Printf("character HP: %d\n", character.CurrentHitPoints)
 	// Verify remaining HP and temporary HP
 	assert.Equal(t, 0, character.TemporaryHitPoints, "Temporary HP not reduced correctly")
-	assert.Equal(t, character.DamageAudits[0].HitPointsBefore-10, character.GetTotalHitPoints(), "Regular HP should remain unchanged after temporary HP absorbs damage")
+	assert.Equal(t, character.History.DamageAudits[0].HitPointsBefore-10, character.GetTotalHitPoints(), "Regular HP should remain unchanged after temporary HP absorbs damage")
 }

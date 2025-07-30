@@ -125,6 +125,8 @@ var ConditionEffects = func() map[string][]string {
 			"The character automatically fails Strength and Dexterity saves.",
 			"Attack rolls against an unconscious character have advantage",
 			"Any attack that hits the character is a critical hit if the attacker is within 5 feet of the character."},
+		"dead": {"Magical healing or a WIS(Medicine) check can't help a dead character. ",
+			"Only a spell like revivify or resurrection can bring the character back to life."},
 	}
 }
 
@@ -262,88 +264,68 @@ type Character struct {
 	ID                           string
 	Name                         string
 	OverallLevel                 int
-	OverallLevelAudit            []AuditEntry
 	CharacterLevels              map[string]int
-	CharacterLevelsAudit         []AuditEntry
 	CharacterClassStr            string // if multiclassing this will be class 1/class 2/class 3/etc
 	CharacterClassBuildType      ClassBuildType
 	CharacterSubClassToImplement Subclass // store subclass in case the pc is < 3rd level
 	CharacterSubClass            Subclass
 	DamageTypeAdjustments        map[string]string
-	DamageTypeAdjustmentsAudit   []AuditEntry
 	HitDice                      []HitDie
-	HitDiceAudit                 []AuditEntry
 	Lineage                      Lineage
 	LineageChoices               map[string][]string
-	LineageChoicesAudit          []AuditEntry
 	LineageInputRequired         bool
 	Heritage                     Heritage
 	HeritageChoices              map[string][]string
-	HeritageChoicesAudit         []AuditEntry
 	HeritageInputRequired        bool
 	KnownLanguages               []string
-	KnownLanguagesAudit          []AuditEntry
 	KnownLanguagesInputRequired  bool
 	Background                   Background
 	BackgroundChoices            map[string][]string
-	BackgroundChoicesAudit       []AuditEntry
 	BackgroundInputRequired      bool
 	CharacterSize                string
-	CharacterSizeAudit           []AuditEntry
 	Traits                       map[string]string
 	TraitChoices                 map[string][]string
-	TraitChoicesAudit            []AuditEntry
 	BaseSkills                   map[string]int
 	BaseSkillBonus               map[string]int
-	BaseSkillBonusAudit          []AuditEntry
 	Abilities                    AbilityArray
 	AbilitySaveModifiers         map[string]int
-	AbilitySaveModifiersAudit    []AuditEntry
 	RollingOption                string
 	HitPointBonuses              map[string]int
-	HitPointBonusesAudit         []AuditEntry
 	TotalHitPointBonuses         int
-	TotalHitPointBonusAudit      []AuditEntry
 	MaxHitPoints                 int
-	MaxHitPointsAudit            []AuditEntry
 	TemporaryHitPoints           int
-	TemporaryHitPointsAudit      []AuditEntry
 	CurrentHitPoints             int
-	CurrentHitPointsAudit        []AuditEntry
 	InitiativeBonus              int
-	InitiativeBonusAudit         []AuditEntry
 	PassiveInvestigation         int
 	PassivePerception            int
 	PassiveInsight               int
 	Talents                      map[string]Talent
-	TalentsAudit                 []AuditEntry
 	TalentsChoices               map[string][]string
-	TalentsChoicesAudit          []AuditEntry
 	TalentsInputRequired         bool
 	DeathSaves                   [3]int
-	DeathSavesAudit              []AuditEntry
 	SpellBook                    []string
-	SpellBookAudit               []AuditEntry
 	SkillProficiencies           map[string]AbilitySkillProficiency
-	SkillProficienciesAudit      []AuditEntry
 	SkillBonus                   map[string]map[string]AbilitySkillBonus
-	SkillBonusAudit              []AuditEntry
 	ProficiencyBonusBonus        map[string]AbilitySkillBonus
-	ProficiencyBonusBonusAudit   []AuditEntry
 	Tools                        map[string]static_data.Tool
-	ToolsAudit                   []AuditEntry
 	TotalSkillModifiers          map[string]int
 	Equipment                    []string
-	EquipmentAudit               []AuditEntry
 	MovementBase                 map[string]MovementValue
 	MovementBonus                map[string]map[string]MovementValue
-	MovementBonusAudit           []AuditEntry
 	TotalMovement                map[string]MovementValue
 	AbilitySkills                map[string]AbilitySkill
-	AbilitySkillsAudit           []AuditEntry
 	ConditionAdjustments         map[string][]ConditionAdjustment
-	ConditionAdjustmentsAudit    []AuditEntry
-	DamageAudits                 []DamageAudit
+	Conditions                   map[string]string // key = condition name, value = note
+	History                      HistoryAudit
+}
+
+// HistoryAudit represents an auditable record for the character.  When there's
+//
+//	a change to a character value, the attr name that changed will be the map key
+type HistoryAudit struct {
+	CharacterId  string
+	Audits       map[string][]AuditEntry
+	DamageAudits []DamageAudit
 }
 
 func (c *Character) SetConditionAdjustment(condition string, vantage VantageType, source string) {
@@ -503,7 +485,7 @@ func (c *Character) AddTalent(t Talent, source string) error {
 
 	c.Talents[t.Name] = t
 	// Record the audit
-	c.TalentsAudit = append(c.TalentsAudit, audit)
+	c.History.Audits["Talents"] = append(c.History.Audits["Talents"], audit)
 
 	return nil
 }
@@ -555,7 +537,7 @@ func ValidateName(name string) error {
 
 	// Ensure the Name is not empty
 	if name == "" {
-		return errors.New("Name cannot be empty")
+		return errors.New("name cannot be empty")
 	}
 
 	// Regular expression to match invalid characters
@@ -567,7 +549,7 @@ func ValidateName(name string) error {
 
 	// Check if any invalid character is found
 	if matched {
-		return errors.New("Name contains invalid characters")
+		return errors.New("name contains invalid characters")
 	}
 
 	// If no error found, return nil
@@ -634,7 +616,7 @@ func (c *Character) AddHitPointsForLevel(nbrOfLevels int, sides int, startingLev
 	beforeMaxHP := c.MaxHitPoints
 	c.MaxHitPoints += results.Result
 	c.CurrentHitPoints = c.MaxHitPoints
-	c.MaxHitPointsAudit = append(c.MaxHitPointsAudit,
+	c.History.Audits["MaxHitPoints"] = append(c.History.Audits["MaxHitPoints"],
 		AuditEntry{
 			Field:    "MaxHitPoints",
 			OldValue: beforeMaxHP,
@@ -654,7 +636,7 @@ func (c *Character) AddHitPointsForLevel(nbrOfLevels int, sides int, startingLev
 		},
 	)
 
-	c.CurrentHitPointsAudit = append(c.CurrentHitPointsAudit,
+	c.History.Audits["CurrentHitPoints"] = append(c.History.Audits["CurrentHitPoints"],
 		AuditEntry{
 			Field:    "CurrentHitPoints",
 			OldValue: beforeCurrentHP,
@@ -709,7 +691,7 @@ func (c *Character) InitHitPoints() {
 			if err != nil {
 				panic(err)
 			}
-			c.CurrentHitPointsAudit = append(c.CurrentHitPointsAudit,
+			c.History.Audits["CurrentHitPoints"] = append(c.History.Audits["CurrentHitPoints"],
 				AuditEntry{
 					Field:    "CurrentHitPoints",
 					OldValue: 0,
@@ -792,22 +774,33 @@ func (c *Character) Damage(amount int, damageType string) {
 	fmt.Printf("Damage: %d\n", workingAmount)
 
 	if workingAmount > 0 {
-
+		startingValue := c.CurrentHitPoints
 		c.CurrentHitPoints -= workingAmount
 		if c.CurrentHitPoints <= 0 {
 			// Handle unconscious or death (not implemented here, but stub logic included)
 			if -c.CurrentHitPoints >= c.MaxHitPoints {
-				// TODO: Handle instant death (e.g. exceeds max HP)
 				fmt.Println("Character has suffered instant death!")
+				c.History.Audits["CurrentHitPoints"] = append(c.History.Audits["CurrentHitPoints"],
+					AuditEntry{
+						Field:     "CurrentHitPoints",
+						OldValue:  fmt.Sprintf("%d/%d", startingValue, c.MaxHitPoints),
+						NewValue:  fmt.Sprintf("%d < - %d = Instant Death", c.CurrentHitPoints, c.MaxHitPoints),
+						Source:    "Character.Damage - Instant Death",
+						Timestamp: time.Now(),
+					},
+				)
+				c.CurrentHitPoints = 0
+				c.MaxHitPoints = 0
+				c.Conditions["dead"] = fmt.Sprintf("character suffered instant death at %v", time.Now().Format(time.RFC3339))
 			} else {
-				// TODO: Handle falling unconscious (e.g. set status effect)
-				fmt.Println("Character has fallen unconscious.")
+				c.Conditions["unconscious"] = fmt.Sprintf("character fell unconscious at %v", time.Now().Format(time.RFC3339))
+
 			}
 		}
 
 	}
 	audit.HitPointsAfter = c.GetTotalHitPoints()
-	c.DamageAudits = append(c.DamageAudits, audit)
+	c.History.DamageAudits = append(c.History.DamageAudits, audit)
 }
 
 func (c *Character) ModifyTemporaryHitPoints(amount int) {
@@ -838,13 +831,13 @@ func (c *Character) AddClassLevel(className string, source string) {
 
 	// Record class level audit
 	classAudit := AuditEntry{
-		Field:     "Classes." + className,
+		Field:     "CharacterLevels",
 		OldValue:  oldClassLevel,
 		NewValue:  c.CharacterLevels[className],
 		Source:    source,
 		Timestamp: time.Now(),
 	}
-	c.CharacterLevelsAudit = append(c.CharacterLevelsAudit, classAudit)
+	c.History.Audits["CharacterLevels"] = append(c.History.Audits["CharacterLevels"], classAudit)
 
 	// Record total level audit
 	levelAudit := AuditEntry{
@@ -854,7 +847,7 @@ func (c *Character) AddClassLevel(className string, source string) {
 		Source:    source,
 		Timestamp: time.Now(),
 	}
-	c.OverallLevelAudit = append(c.OverallLevelAudit, levelAudit)
+	c.History.Audits["OverallLevel"] = append(c.History.Audits["OverallLevel"], levelAudit)
 
 	// Apply level-up benefits based on the new class level
 	// todo: implement this through the classes themselves instead of
@@ -962,11 +955,19 @@ func NewCharacter(
 	useClass := Class{}
 	useLineage := Lineage{}
 	useHeritage := Heritage{}
-	err := error(nil)
+	id, err := helpers.GenerateRandomString(13)
+	if err != nil {
+		return nil, err
+	}
+	Audit := HistoryAudit{
+		CharacterId:  id,
+		Audits:       make(map[string][]AuditEntry),
+		DamageAudits: make([]DamageAudit, 0),
+	}
 
 	err = ValidateName(name)
 	if err != nil {
-		return nil, fmt.Errorf("Name is invalid: %v", err)
+		return nil, fmt.Errorf("name is invalid: %v", err)
 	}
 	err = ValidateLevel(level)
 	if err != nil {
@@ -1085,6 +1086,7 @@ func NewCharacter(
 	KnownLanguages := useHeritage.LanguageDefaults
 
 	character := &Character{
+		ID:                           id,
 		Name:                         name,
 		OverallLevel:                 level,
 		CharacterClassStr:            characterClassName,
@@ -1094,7 +1096,6 @@ func NewCharacter(
 		HitDice:                      hd,
 		DamageTypeAdjustments:        make(map[string]string),
 		HitPointBonuses:              make(map[string]int),
-		DamageAudits:                 []DamageAudit{},
 		TemporaryHitPoints:           0,
 		ProficiencyBonusBonus:        make(map[string]AbilitySkillBonus),
 		MovementBase:                 Movement(float64(useLineage.Speed)),
@@ -1106,6 +1107,7 @@ func NewCharacter(
 		Traits:                       chosenTraits,
 		Abilities:                    *a,
 		Talents:                      map[string]Talent{},
+		History:                      Audit,
 	}
 	character.InitializeAuditFields()
 	character.SetAbilitySkills()
@@ -1263,7 +1265,7 @@ func (c *Character) PrintDetails() {
 		}
 	}
 	fmt.Printf("\nHit Point Audit:\n")
-	for _, value := range c.CurrentHitPointsAudit {
+	for _, value := range c.History.Audits["CurrentHitPoints"] {
 		fmt.Printf("%v %v %s\n", value.OldValue,
 			value.NewValue, value.Source)
 	}
