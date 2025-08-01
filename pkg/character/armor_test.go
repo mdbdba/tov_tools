@@ -158,7 +158,7 @@ func TestArmor(t *testing.T) {
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
 		"nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		"Standard", ctxRef, observedLoggerSugared)
+		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 	testCharacter.SetAbilitySkills()
 
 	assert.NoError(t, err, "Unexpected error when creating test character")

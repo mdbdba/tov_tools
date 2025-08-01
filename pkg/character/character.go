@@ -303,6 +303,7 @@ type Character struct {
 	TalentsChoices               map[string][]string
 	TalentsInputRequired         bool
 	DeathSaves                   [3]int
+	SpellcastingAbility          string
 	SpellBook                    []string
 	SkillProficiencies           map[string]AbilitySkillProficiency
 	SkillBonus                   map[string]map[string]AbilitySkillBonus
@@ -316,6 +317,8 @@ type Character struct {
 	AbilitySkills                map[string]AbilitySkill
 	ConditionAdjustments         map[string][]ConditionAdjustment
 	Conditions                   map[string]string // key = condition name, value = note
+	AbilityScoreOrderPreference  []string
+	KeyAbilities                 []string
 	History                      HistoryAudit
 }
 
@@ -948,6 +951,7 @@ func NewCharacter(
 	chosenTraits map[string]string,
 	chosenTalents []string,
 	classBuildType string,
+	manualBuildType ClassBuildType,
 	ctxRef string,
 	logger *zap.SugaredLogger) (*Character, error) {
 
@@ -1058,9 +1062,6 @@ func NewCharacter(
 			fmt.Printf("Could not find the talent: %s. Ignoring.\n", talent)
 		}
 	}
-	// TODO: marry up chosen Talents with reasons to choose them!
-
-	// TODO: apply any class modifiers here, like humans getting a talent, etc
 
 	AbilityScoreOrderPreference := useClass.ClassBuildTypes[classBuildType].AbilityScoreOrderPreference
 	BonusArray := BonusArrayTemplate()
@@ -1085,6 +1086,16 @@ func NewCharacter(
 
 	KnownLanguages := useHeritage.LanguageDefaults
 
+	var useAbilityScoreOrderPreference []string
+	var useKeyAbilities []string
+	if val, ok := useClass.ClassBuildTypes[classBuildType]; ok {
+		useAbilityScoreOrderPreference = val.AbilityScoreOrderPreference
+		useKeyAbilities = val.KeyAbilities
+	} else {
+		useAbilityScoreOrderPreference = manualBuildType.AbilityScoreOrderPreference
+		useKeyAbilities = manualBuildType.KeyAbilities
+	}
+
 	character := &Character{
 		ID:                           id,
 		Name:                         name,
@@ -1107,6 +1118,9 @@ func NewCharacter(
 		Traits:                       chosenTraits,
 		Abilities:                    *a,
 		Talents:                      map[string]Talent{},
+		SpellcastingAbility:          string(useClass.SpellcastingAbility),
+		AbilityScoreOrderPreference:  useAbilityScoreOrderPreference,
+		KeyAbilities:                 useKeyAbilities,
 		History:                      Audit,
 	}
 	character.InitializeAuditFields()
