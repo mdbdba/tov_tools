@@ -1,10 +1,11 @@
 package character
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
-	"testing"
 )
 
 func TestSkillBonusTalent(t *testing.T) {
@@ -33,7 +34,7 @@ func TestSkillBonusTalent(t *testing.T) {
 	testCharacter, err := NewCharacter(
 		"Test Mage", 3, "Wizard", "battle mage",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		"Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
+		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	testCharacter.BaseSkillBonus = map[string]int{"Arcana": 0}
@@ -77,7 +78,7 @@ func TestFlatBonusTalent(t *testing.T) {
 	testCharacter, err := NewCharacter(
 		"Test Fighter", 1, "Fighter", "weapon master",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		"Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
+		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	// Add the talent to the character
@@ -121,7 +122,7 @@ func TestSpellSwapTalent(t *testing.T) {
 	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard", "battle mage",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		"Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
+		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Error creating test character")
 	testCharacter.SpellBook = []string{"Firebolt", "Mage Armor"}

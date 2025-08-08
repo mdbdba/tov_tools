@@ -1,10 +1,11 @@
 package character
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
-	"testing"
 )
 
 // Character stub for testing prerequisites
@@ -157,7 +158,7 @@ func TestArmor(t *testing.T) {
 	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
-		"nomadic", "Medium", rollingOption, map[string]string{}, []string{},
+		"nomadic", "Medium", rollingOption, map[string]string{}, []string{}, []string{},
 		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 	testCharacter.SetAbilitySkills()
 

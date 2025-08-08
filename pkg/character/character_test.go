@@ -2,13 +2,14 @@ package character
 
 import (
 	"fmt"
+	"testing"
+	"tov_tools/pkg/dice"
+	"tov_tools/pkg/helpers"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
-	"testing"
-	"tov_tools/pkg/dice"
-	"tov_tools/pkg/helpers"
 )
 
 func TestCharacterCreation(t *testing.T) {
@@ -135,7 +136,7 @@ func TestCharacterCreation(t *testing.T) {
 			testCase.selectedSubclassName,
 			testCase.lineageKey, testCase.heritageKey,
 			Lineages[testCase.lineageKey].SizeOptions[0], rollingOption,
-			testCase.lineageSelectedTraits, []string{},
+			testCase.lineageSelectedTraits, []string{}, []string{},
 			"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 		if err != nil {
@@ -200,7 +201,7 @@ func TestSetAbilitySkills(t *testing.T) {
 	testCharacter, err := NewCharacter(
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
-		"nomadic", "Medium", rollingOption, map[string]string{}, []string{},
+		"nomadic", "Medium", rollingOption, map[string]string{}, []string{}, []string{},
 		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	testCharacter.SkillProficiencies = map[string]AbilitySkillProficiency{
@@ -299,7 +300,7 @@ func TestAbilityUpdateReflectsEverywhere(t *testing.T) {
 
 	c, err := NewCharacter("Test Fighter", 1, "Fighter", "weapon master",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+		[]string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	fmt.Println("BEFORE")
@@ -349,7 +350,7 @@ func TestInvalidCharacterCreation(t *testing.T) {
 			"battle mage",
 			tc.lineageKey, "nomadic",
 			"medium", rollingOption,
-			map[string]string{}, []string{},
+			map[string]string{}, []string{}, []string{},
 			"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 		assert.Error(t, err, "Expected error when creating character with invalid size")
@@ -369,7 +370,7 @@ func TestCharacterWithNoTraits(t *testing.T) {
 		"Mr NoTraits", 1, "ranger", "pack master",
 		"human", "nomadic",
 		"Medium", rollingOption,
-		map[string]string{}, []string{},
+		map[string]string{}, []string{}, []string{},
 		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating character with no Traits")
@@ -399,7 +400,7 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 			tc.name, 1, "Wizard", "battle mage",
 			tc.lineageKey, tc.heritageKey,
 			Lineages[tc.lineageKey].SizeOptions[0], rollingOption,
-			map[string]string{}, []string{},
+			map[string]string{}, []string{}, []string{},
 			"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 		assert.Error(t, err, fmt.Sprintf("Expected error when creating %s character with invalid Name", tc.lineageKey))
@@ -427,7 +428,7 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 			"battle mage",
 			tc.lineageKey, tc.heritageKey,
 			tc.size, rollingOption,
-			map[string]string{}, []string{},
+			map[string]string{}, []string{}, []string{},
 			"Standard", ClassBuildType{}, "Character Size Edge Case", observedLoggerSugared)
 		if err == nil {
 			t.Errorf("Character creation should have failed for Name '%s' tested size: %s", tc.name, tc.size)
@@ -464,7 +465,7 @@ func TestInvalidInputsForNewCharacter(t *testing.T) {
 			_, err := NewCharacter(
 				tc.name, tc.level, tc.class, "battle mage",
 				"human", "nomadic", tc.size, tc.rollingOption, map[string]string{}, []string{},
-				"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+				[]string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 			if tc.expectError {
 				assert.Error(t, err, "Expected error for invalid input")
@@ -499,8 +500,8 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 
 			character, err := NewCharacter(
 				tc.name, tc.level, tc.class, tc.subClass,
-				"human", "nomadic", "Medium", "standard", map[string]string{}, []string{},
-				"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+				"human", "nomadic", "Medium", "standard", map[string]string{},
+				[]string{}, []string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
 			if err != nil {
 				t.Fatalf("Error creating character %s: %v", tc.name, err)
@@ -534,8 +535,8 @@ func TestTemporaryHitPoints(t *testing.T) {
 	ctxRef := "Temporary HP Test"
 	character, err := NewCharacter(
 		"Temp HP Tester", 4, "Warlock", "fiend",
-		"human", "cosmopolitan", "Small", "standard", map[string]string{}, []string{},
-		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+		"human", "cosmopolitan", "Small", "standard", map[string]string{},
+		[]string{}, []string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating character")
 
 	// Add temporary HP

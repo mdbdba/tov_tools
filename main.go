@@ -19,6 +19,12 @@ func main() {
 	zap.ReplaceGlobals(logger)
 
 	router := gin.New()
+	router.ForwardedByClientIP = true
+	err := router.SetTrustedProxies([]string{"127.0.0.1"})
+	if err != nil {
+		// Handle error if trusted proxies cannot be set
+		panic(err)
+	}
 	// gin.SetMode(gin.ReleaseMode)
 	router.Use(gin.Recovery(), middleware.ZapLogger())
 

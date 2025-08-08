@@ -1,0 +1,523 @@
+
+### Test Variables
+# These should match your http-client.env.json configuration
+
+### Create a Test Character - Basic Human Fighter
+POST http://{{host}}/{{apiPath}}/character/create
+Content-Type: application/json
+
+{
+  "name": "Test Fighter",
+  "level": 1,
+  "class": "Fighter",
+  "subclass": "Champion",
+  "lineage": "Human",
+  "heritage": "Cosmopolitan",
+  "size": "Medium",
+  "ability_generation_method": "standard",
+  "traits": {
+    "background": "Soldier"
+  },
+  "languages": ["Common", "Orcish"]
+}
+
+> {%
+    client.log("=== CREATE CHARACTER TEST ===");
+    client.log("Response status: " + response.status);
+
+    // Parse response
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+            client.log("Raw response body: " + response.body);
+        }
+    }
+
+    client.test("Character creation executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201 (Created)");
+    });
+
+    if (json) {
+        client.test("Response has character ID", function() {
+            client.assert(json.id !== undefined && json.id > 0, "Character ID is missing or invalid");
+        });
+
+        client.test("Response has correct character name", function() {
+            client.assert(json.name === "Test Fighter", "Character name is not 'Test Fighter'");
+        });
+
+        client.test("Response has correct lineage", function() {
+            client.assert(json.lineage === "Human", "Lineage is not 'Human'");
+        });
+
+        client.test("Response has correct heritage", function() {
+            client.assert(json.heritage === "Cosmopolitan", "Heritage is not 'Cosmopolitan'");
+        });
+
+        client.test("Response has ability scores", function() {
+            client.assert(json.ability_scores !== undefined, "Ability scores are missing");
+            client.assert(Object.keys(json.ability_scores).length === 6, "Should have 6 ability scores");
+        });
+
+        client.test("Response has ability modifiers", function() {
+            client.assert(json.ability_modifiers !== undefined, "Ability modifiers are missing");
+            client.assert(Object.keys(json.ability_modifiers).length === 6, "Should have 6 ability modifiers");
+        });
+
+        // Store the character ID for subsequent tests
+        if (json.id) {
+            client.global.set("testCharacterId", json.id.toString());
+            client.log("Created character with ID: " + json.id);
+        }
+
+        // Log character details
+        client.log("--- CHARACTER DETAILS ---");
+        client.log("Name: " + json.name);
+        client.log("Level: " + json.level);
+        client.log("Class: " + json.class);
+        client.log("Subclass: " + json.subclass);
+        client.log("Lineage: " + json.lineage);
+        client.log("Heritage: " + json.heritage);
+        client.log("Size: " + json.size);
+
+        if (json.ability_scores) {
+            client.log("--- ABILITY SCORES ---");
+            for (const [ability, score] of Object.entries(json.ability_scores)) {
+                const modifier = json.ability_modifiers[ability];
+                const modStr = modifier >= 0 ? "+" + modifier : modifier.toString();
+                client.log(`${ability.toUpperCase()}: ${score} (${modStr})`);
+            }
+        }
+        client.log("------------------------");
+    }
+%}
+
+### Create a Second Test Character - Dwarf Cleric
+POST http://{{host}}/{{apiPath}}/character/create
+Content-Type: application/json
+
+{
+  "name": "Test Cleric",
+  "level": 2,
+  "class": "Cleric",
+  "subclass": "Life Domain",
+  "lineage": "Dwarf",
+  "heritage": "Fireforge",
+  "traits": {
+    "background": "Acolyte"
+  },
+  "languages": ["Common", "Dwarvish", "Celestial"]
+}
+
+> {%
+    client.log("=== CREATE SECOND CHARACTER TEST ===");
+    client.log("Response status: " + response.status);
+
+    client.test("Second character creation executed successfully", function() {
+        client.assert(response.status === 201, "Response status is not 201 (Created)");
+    });
+
+    // Parse and store the second character ID
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    if (json && json.id) {
+        client.global.set("testCharacterId2", json.id.toString());
+        client.log("Created second character with ID: " + json.id);
+    }
+%}
+
+### Get Character by Name
+GET http://{{host}}/{{apiPath}}/character/name/Test Fighter
+
+> {%
+    client.log("=== GET CHARACTER BY NAME TEST ===");
+    client.log("Response status: " + response.status);
+
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    client.test("Get character by name executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    if (json) {
+        client.test("Retrieved correct character", function() {
+            client.assert(json.name === "Test Fighter", "Character name doesn't match");
+        });
+
+        client.test("Character has expected properties", function() {
+            client.assert(json.id !== undefined, "Character ID is missing");
+            client.assert(json.lineage === "Human", "Lineage doesn't match");
+            client.assert(json.heritage === "Cosmopolitan", "Heritage doesn't match");
+        });
+
+        client.log("Retrieved character: " + json.name + " (ID: " + json.id + ")");
+    }
+%}
+
+### Get Character by Name (Case-insensitive test)
+GET http://{{host}}/{{apiPath}}/character/name/test fighter
+
+> {%
+    client.log("=== CASE-INSENSITIVE NAME TEST ===");
+    client.test("Case-insensitive name lookup works", function() {
+        client.assert(response.status === 200, "Case-insensitive lookup failed");
+    });
+%}
+
+### Get Character by Name (Non-existent - should return 404)
+GET http://{{host}}/{{apiPath}}/character/name/NonExistentCharacter
+
+> {%
+    client.log("=== NON-EXISTENT CHARACTER TEST ===");
+    client.test("Non-existent character returns 404", function() {
+        client.assert(response.status === 404, "Should return 404 for non-existent character");
+    });
+%}
+
+### Get Character by ID
+GET http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
+
+> {%
+    client.log("=== GET CHARACTER BY ID TEST ===");
+    client.log("Response status: " + response.status);
+
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    client.test("Get character by ID executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    if (json) {
+        client.test("Retrieved correct character by ID", function() {
+            client.assert(json.name === "Test Fighter", "Character name doesn't match");
+            client.assert(json.id.toString() === client.global.get("testCharacterId"), "Character ID doesn't match");
+        });
+
+        client.log("Retrieved character by ID: " + json.name + " (ID: " + json.id + ")");
+    }
+%}
+
+### Get Character by ID (Non-existent - should return 404)
+GET http://{{host}}/{{apiPath}}/character/id/99999
+
+> {%
+    client.log("=== NON-EXISTENT CHARACTER ID TEST ===");
+    client.test("Non-existent character ID returns 404", function() {
+        client.assert(response.status === 404, "Should return 404 for non-existent character ID");
+    });
+%}
+
+### Get Character by ID (Invalid ID format - should return 400)
+GET http://{{host}}/{{apiPath}}/character/id/invalid
+
+> {%
+    client.log("=== INVALID CHARACTER ID TEST ===");
+    client.test("Invalid character ID returns 400", function() {
+        client.assert(response.status === 400, "Should return 400 for invalid character ID format");
+    });
+%}
+
+### Get All Characters
+GET http://{{host}}/{{apiPath}}/characters
+
+> {%
+    client.log("=== GET ALL CHARACTERS TEST ===");
+    client.log("Response status: " + response.status);
+
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    client.test("Get all characters executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    if (json) {
+        client.test("Response has characters array", function() {
+            client.assert(json.characters !== undefined, "Characters array is missing");
+            client.assert(Array.isArray(json.characters), "Characters is not an array");
+        });
+
+        client.test("At least two characters exist", function() {
+            client.assert(json.characters.length >= 2, "Should have at least 2 characters");
+        });
+
+        if (json.characters) {
+            client.log("--- ALL CHARACTERS ---");
+            json.characters.forEach((char, index) => {
+                client.log(`${index + 1}. ${char.name} (ID: ${char.id}) - ${char.lineage} ${char.class}`);
+            });
+            client.log("Total characters: " + json.characters.length);
+            client.log("---------------------");
+        }
+    }
+%}
+
+### Update Character
+PUT http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
+Content-Type: application/json
+
+{
+  "name": "Updated Fighter",
+  "level": 3,
+  "class": "Fighter",
+  "subclass": "Champion",
+  "lineage": "Human",
+  "heritage": "Cosmopolitan",
+  "traits": {
+    "background": "Soldier",
+    "updated": "true"
+  },
+  "languages": ["Common", "Orcish", "Elvish"]
+}
+
+> {%
+    client.log("=== UPDATE CHARACTER TEST ===");
+    client.log("Response status: " + response.status);
+
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    client.test("Update character executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    if (json) {
+        client.test("Character name was updated", function() {
+            client.assert(json.name === "Updated Fighter", "Character name was not updated");
+        });
+
+        client.log("Updated character: " + json.name);
+    }
+%}
+
+### Update Character (Non-existent ID - should return 404)
+PUT http://{{host}}/{{apiPath}}/character/id/99999
+Content-Type: application/json
+
+{
+  "name": "Should Not Work",
+  "class": "Fighter",
+  "lineage": "Human",
+  "heritage": "Cosmopolitan"
+}
+
+> {%
+    client.log("=== UPDATE NON-EXISTENT CHARACTER TEST ===");
+    client.test("Update non-existent character returns 404", function() {
+        client.assert(response.status === 404, "Should return 404 for non-existent character");
+    });
+%}
+
+### Verify Updated Character by Getting it Again
+GET http://{{host}}/{{apiPath}}/character/name/Updated Fighter
+
+> {%
+    client.log("=== VERIFY UPDATE TEST ===");
+    client.test("Updated character can be retrieved by new name", function() {
+        client.assert(response.status === 200, "Should be able to get updated character");
+    });
+
+    if (response.status === 200) {
+        if (typeof response.body === 'object') {
+            var json = response.body;
+        } else {
+            try {
+                var json = JSON.parse(response.body);
+            } catch (e) {
+                client.log("Error parsing JSON: " + e.message);
+            }
+        }
+
+        if (json) {
+            client.test("Character has updated name", function() {
+                client.assert(json.name === "Updated Fighter", "Character name was not properly updated");
+            });
+        }
+    }
+%}
+
+### Test Character Creation with Missing Required Fields
+POST http://{{host}}/{{apiPath}}/character/create
+Content-Type: application/json
+
+{
+  "name": "Incomplete Character"
+}
+
+> {%
+    client.log("=== INVALID CHARACTER CREATION TEST ===");
+    client.test("Invalid character creation returns 400", function() {
+        client.assert(response.status === 400, "Should return 400 for missing required fields");
+    });
+%}
+
+### Test Character Creation with Invalid Lineage
+POST http://{{host}}/{{apiPath}}/character/create
+Content-Type: application/json
+
+{
+  "name": "Invalid Lineage Character",
+  "class": "Fighter",
+  "lineage": "InvalidLineage",
+  "heritage": "Cosmopolitan"
+}
+
+> {%
+    client.log("=== INVALID LINEAGE TEST ===");
+    client.test("Invalid lineage returns 400", function() {
+        client.assert(response.status === 400, "Should return 400 for invalid lineage");
+    });
+%}
+
+### Test Character Creation with Duplicate Name
+POST http://{{host}}/{{apiPath}}/character/create
+Content-Type: application/json
+
+{
+  "name": "Updated Fighter",
+  "class": "Rogue",
+  "lineage": "Elf",
+  "heritage": "High"
+}
+
+> {%
+    client.log("=== DUPLICATE NAME TEST ===");
+    client.test("Duplicate character name returns 409", function() {
+        client.assert(response.status === 409, "Should return 409 for duplicate character name");
+    });
+%}
+
+### Delete Character (Clean up - delete second character first)
+DELETE http://{{host}}/{{apiPath}}/character/id/{{testCharacterId2}}
+
+> {%
+    client.log("=== DELETE SECOND CHARACTER TEST ===");
+    client.test("Delete character executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.log("Deleted second test character");
+%}
+
+### Delete Character (Main test character)
+DELETE http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
+
+> {%
+    client.log("=== DELETE CHARACTER TEST ===");
+    client.log("Response status: " + response.status);
+
+    client.test("Delete character executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.log("Deleted main test character");
+%}
+
+### Delete Character (Non-existent - should return 404)
+DELETE http://{{host}}/{{apiPath}}/character/id/99999
+
+> {%
+    client.log("=== DELETE NON-EXISTENT CHARACTER TEST ===");
+    client.test("Delete non-existent character returns 404", function() {
+        client.assert(response.status === 404, "Should return 404 for non-existent character");
+    });
+%}
+
+### Verify Character Deletion - Try to get deleted character
+GET http://{{host}}/{{apiPath}}/character/name/Updated Fighter
+
+> {%
+    client.log("=== VERIFY DELETION TEST ===");
+    client.test("Deleted character cannot be retrieved", function() {
+        client.assert(response.status === 404, "Should return 404 for deleted character");
+    });
+
+    client.log("Confirmed character was deleted");
+%}
+
+### Final Verification - Get All Characters (should be empty or not include our test characters)
+GET http://{{host}}/{{apiPath}}/characters
+
+> {%
+    client.log("=== FINAL VERIFICATION TEST ===");
+
+    if (typeof response.body === 'object') {
+        var json = response.body;
+    } else {
+        try {
+            var json = JSON.parse(response.body);
+        } catch (e) {
+            client.log("Error parsing JSON: " + e.message);
+        }
+    }
+
+    client.test("Get all characters still works after deletions", function() {
+        client.assert(response.status === 200, "Should still be able to get all characters");
+    });
+
+    if (json && json.characters) {
+        // Check that our test characters are not in the list
+        const testCharacterNames = ["Test Fighter", "Updated Fighter", "Test Cleric"];
+        let foundTestCharacters = json.characters.filter(char =>
+            testCharacterNames.includes(char.name)
+        );
+
+        client.test("Test characters were properly deleted", function() {
+            client.assert(foundTestCharacters.length === 0,
+                "Found test characters that should have been deleted: " +
+                foundTestCharacters.map(c => c.name).join(", "));
+        });
+
+        client.log("Final character count: " + json.characters.length);
+        if (json.characters.length > 0) {
+            client.log("Remaining characters:");
+            json.characters.forEach(char => {
+                client.log(`- ${char.name} (ID: ${char.id})`);
+            });
+        }
+    }
+
+    client.log("=== ALL TESTS COMPLETED ===");
+%}

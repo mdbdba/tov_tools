@@ -3,7 +3,6 @@ package character
 import (
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"reflect"
 	"regexp"
 	"sort"
@@ -12,6 +11,8 @@ import (
 	"tov_tools/pkg/dice"
 	"tov_tools/pkg/helpers"
 	"tov_tools/pkg/static_data"
+
+	"go.uber.org/zap"
 )
 
 var zapLogger *zap.SugaredLogger
@@ -928,6 +929,28 @@ func (c *Character) InitializeAuditFields() {
 	}
 }
 
+// ValidateLineage makes sure a valid lineage is used.
+func ValidateLineage(lineageName string) bool {
+	if lineageName != "" {
+		_, err := GetLineageByName(lineageName)
+		if err != nil {
+			return false
+		}
+	} else {
+		return false
+	}
+	return true
+}
+
+func ValidateLanguages(languages []string) bool {
+	for lang := range languages {
+		if _, ok := Languages()[languages[lang]]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
 // NewCharacter Method to create a new character with default properties.
 //
 //	rollingOptions:
@@ -950,6 +973,7 @@ func NewCharacter(
 	rollingOption string,
 	chosenTraits map[string]string,
 	chosenTalents []string,
+	chosenLanguages []string,
 	classBuildType string,
 	manualBuildType ClassBuildType,
 	ctxRef string,
@@ -969,6 +993,9 @@ func NewCharacter(
 		DamageAudits: make([]DamageAudit, 0),
 	}
 
+	if len(name) == 0 {
+		return nil, fmt.Errorf("name cannot be empty")
+	}
 	err = ValidateName(name)
 	if err != nil {
 		return nil, fmt.Errorf("name is invalid: %v", err)
@@ -1027,13 +1054,13 @@ func NewCharacter(
 		}
 	}
 
-	if lineageName != "" {
+	if ValidateLineage(lineageName) {
 		useLineage, err = GetLineageByName(lineageName)
 		if err != nil {
-			return nil, fmt.Errorf("The %s Lineage is not valid.: %v\n", lineageName, err)
+			return nil, fmt.Errorf("Error getting lineage '%s': %v\n", lineageName, err)
 		}
 	} else {
-		return nil, fmt.Errorf("No Lineage specified. ")
+		return nil, fmt.Errorf("a valid lineage was not specified")
 	}
 
 	if heritageName != "" {
@@ -1054,6 +1081,14 @@ func NewCharacter(
 	} else {
 		fmt.Println("No character size specified. Using random selection instead.")
 		chosenSize = RandomSize(useLineage)
+	}
+
+	useLanguages := useHeritage.LanguageDefaults
+	if len(chosenLanguages) > 0 {
+		if ValidateLanguages(chosenLanguages) == false {
+			return nil, fmt.Errorf("languages are invalid: %v", err)
+		}
+		useLanguages = chosenLanguages
 	}
 
 	for _, talent := range chosenTalents {
@@ -1084,7 +1119,7 @@ func NewCharacter(
 		},
 	}
 
-	KnownLanguages := useHeritage.LanguageDefaults
+	// KnownLanguages := useHeritage.LanguageDefaults
 
 	var useAbilityScoreOrderPreference []string
 	var useKeyAbilities []string
@@ -1112,7 +1147,7 @@ func NewCharacter(
 		MovementBase:                 Movement(float64(useLineage.Speed)),
 		MovementBonus:                InitMovementBonus(),
 		Lineage:                      useLineage,
-		KnownLanguages:               KnownLanguages,
+		KnownLanguages:               useLanguages,
 		Heritage:                     useHeritage,
 		CharacterSize:                chosenSize,
 		Traits:                       chosenTraits,

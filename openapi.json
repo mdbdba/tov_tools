@@ -77,33 +77,304 @@
       "post": {
         "summary": "Create a character",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "lineage": { "type": "string" },
-                  "heritage": { "type": "string" },
-                  "class": { "type": "string" }
-                },
-                "required": ["name", "lineage", "heritage", "class"]
+                "$ref": "#/components/schemas/CharacterCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Character created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Character with this name already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/name/{name}": {
+      "get": {
+        "summary": "Get character by name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name of the character (case-insensitive)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Character found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Character not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/character/id/{id}": {
+      "get": {
+        "summary": "Get character by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the character"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Character found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid character ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Character not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update character by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the character"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CharacterCreateRequest"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Character created successfully",
+            "description": "Character updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "name": { "type": "string" },
-                    "lineage": { "type": "string" },
-                    "heritage": { "type": "string" },
-                    "class": { "type": "string" }
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Character not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete character by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the character"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Character deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid character ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Character not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/characters": {
+      "get": {
+        "summary": "Get all characters",
+        "responses": {
+          "200": {
+            "description": "List of all characters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "characters": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CharacterResponse"
+                      }
+                    }
                   }
                 }
               }
@@ -431,6 +702,151 @@
   },
   "components": {
     "schemas": {
+      "CharacterCreateRequest": {
+        "type": "object",
+        "required": ["name", "class", "lineage", "heritage"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Thorin Ironshield"
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 1,
+            "example": 1
+          },
+          "class": {
+            "type": "string",
+            "example": "fighter"
+          },
+          "subclass": {
+            "type": "string",
+            "example": "weapon master"
+          },
+          "lineage": {
+            "type": "string",
+            "example": "dwarf"
+          },
+          "heritage": {
+            "type": "string",
+            "example": "fireforge"
+          },
+          "size": {
+            "type": "string",
+            "example": "Medium"
+          },
+          "ability_generation_method": {
+            "type": "string",
+            "enum": ["Standard", "common", "strict", "pointbuy_even", "pointbuy_onemax", "pointbuy_twomax", "pointbuy_threemax"],
+            "default": "Standard",
+            "example": "Standard"
+          },
+          "traits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "Natural Adaptation": "Agile"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Common", "Dwarvish"]
+          }
+        }
+      },
+      "CharacterResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "example": "Thorin Ironshield"
+          },
+          "level": {
+            "type": "integer",
+            "example": 1
+          },
+          "class": {
+            "type": "string",
+            "example": "fighter"
+          },
+          "subclass": {
+            "type": "string",
+            "example": "weapon master"
+          },
+          "lineage": {
+            "type": "string",
+            "example": "Dwarf"
+          },
+          "heritage": {
+            "type": "string",
+            "example": "Fireforge"
+          },
+          "size": {
+            "type": "string",
+            "example": "Medium"
+          },
+          "ability_scores": {
+            "type": "object",
+            "properties": {
+              "str": {"type": "integer", "example": 15},
+              "dex": {"type": "integer", "example": 13},
+              "con": {"type": "integer", "example": 14},
+              "int": {"type": "integer", "example": 10},
+              "wis": {"type": "integer", "example": 12},
+              "cha": {"type": "integer", "example": 8}
+            }
+          },
+          "ability_modifiers": {
+            "type": "object",
+            "properties": {
+              "str": {"type": "integer", "example": 2},
+              "dex": {"type": "integer", "example": 1},
+              "con": {"type": "integer", "example": 2},
+              "int": {"type": "integer", "example": 0},
+              "wis": {"type": "integer", "example": 1},
+              "cha": {"type": "integer", "example": -1}
+            }
+          },
+          "traits": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "example": {
+              "Darkvision": "You can see in dim light within 60 feet as if it were bright light.",
+              "Dwarven Resilience": "Advantage on saving throws against poison."
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Common", "Dwarvish"]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00Z"
+          }
+        }
+      },
       "Background": {
         "type": "object",
         "properties": {
