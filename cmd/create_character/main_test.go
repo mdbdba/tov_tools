@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zaptest/observer"
 	"os"
 	"os/exec"
 	"testing"
 	"tov_tools/pkg/character"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -320,6 +321,7 @@ func TestCLIIntegration(t *testing.T) {
 	defer os.Remove("test_cli") // Clean up
 
 	tests := []struct {
+		user_id        string
 		name           string
 		args           []string
 		expectExitCode int
@@ -329,6 +331,7 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name: "Successful character creation",
 			args: []string{
+				"-user_id=Skelly",
 				"-name=CLITest",
 				"-class=fighter",
 				"-lineage=human",
@@ -340,6 +343,7 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name: "Character with traits",
 			args: []string{
+				"-user_id=Skelly",
 				"-name=TraitTest",
 				"-class=barbarian",
 				"-lineage=beastkin",
@@ -358,6 +362,7 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name: "Invalid lineage",
 			args: []string{
+				"-user_id=Skelly",
 				"-name=BadLineage",
 				"-class=fighter",
 				"-lineage=invalid_lineage",
@@ -369,6 +374,7 @@ func TestCLIIntegration(t *testing.T) {
 		{
 			name: "Invalid JSON traits",
 			args: []string{
+				"-user_id=Skelly",
 				"-name=BadJSON",
 				"-class=fighter",
 				"-lineage=human",
@@ -414,6 +420,7 @@ func TestCLIIntegration(t *testing.T) {
 // Helper types and functions for testing
 
 type CLIArgs struct {
+	user_id      string
 	name         string
 	level        int
 	class        string
@@ -428,7 +435,7 @@ func parseArgs(args []string) (CLIArgs, error) {
 	// Create a new flag set for testing
 	fs := flag.NewFlagSet("test", flag.ContinueOnError)
 	fs.SetOutput(bytes.NewBuffer(nil)) // Suppress output during tests
-
+	user_id := fs.String("user_id", "Skelly", "The name of the creator of the character")
 	name := fs.String("name", "", "The name of the character to create")
 	level := fs.Int("level", 1, "The level of the character to create")
 	class := fs.String("class", "", "The class of the character to create")
@@ -454,6 +461,7 @@ func parseArgs(args []string) (CLIArgs, error) {
 	}
 
 	return CLIArgs{
+		user_id:      *user_id,
 		name:         *name,
 		level:        *level,
 		class:        *class,
@@ -483,11 +491,11 @@ func createCharacterFromArgs(args CLIArgs) (*character.Character, error) {
 	ctxRef := fmt.Sprintf("cli character generator test: %s", args.name)
 
 	// This would call your actual NewCharacter function
-	return character.NewCharacter(
+	return character.NewCharacter(args.user_id,
 		args.name, args.level, args.class,
 		args.subclass, args.lineage, args.heritage,
 		character.Lineages[args.lineage].SizeOptions[0], "common",
-		args.parsedTraits, []string{},
+		args.parsedTraits, []string{}, []string{},
 		"Standard", character.ClassBuildType{}, ctxRef, observedLoggerSugared) // Using nil for logger in tests
 }
 
@@ -504,6 +512,7 @@ func BenchmarkJSONTraitsParsing(b *testing.B) {
 
 func BenchmarkCharacterCreation(b *testing.B) {
 	args := CLIArgs{
+		user_id:  "Skelly",
 		name:     "BenchmarkChar",
 		level:    1,
 		class:    "fighter",

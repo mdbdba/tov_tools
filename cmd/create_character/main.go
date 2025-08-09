@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	userId := flag.String("user_id", "Skelly", "The name of the creator of the character")
 	characterName := flag.String("name", "", "The name of the character to create")
 	characterLevel := flag.Int("level", 1, "The level of the character to create")
 	className := flag.String("class", "", "The class of the character to create")
@@ -77,6 +78,7 @@ func main() {
 
 	// Create the character request using shared types
 	createReq := types.CharacterCreateRequest{
+		UserId:           *userId,
 		Name:             *characterName,
 		Level:            characterLevel,
 		Class:            *className,
@@ -142,7 +144,8 @@ func main() {
 
 func printCharacterDetails(character types.CharacterResponse) {
 	fmt.Printf("\n=== Character Details ===\n")
-	fmt.Printf("ID: %d\n", character.ID)
+	fmt.Printf("User ID: %s\n", character.UserId)
+	fmt.Printf("ID: %s\n", character.ID)
 	fmt.Printf("Name: %s\n", character.Name)
 	fmt.Printf("Level: %d\n", character.Level)
 	fmt.Printf("Class: %s\n", character.Class)
