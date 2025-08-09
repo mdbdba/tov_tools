@@ -155,7 +155,7 @@ func TestArmor(t *testing.T) {
 	rollingOption := "common"
 	ctxRef := "Test Armor Prerequisites"
 	// Create a test character
-	testCharacter, err := NewCharacter(
+	testCharacter, err := NewCharacter("Skelly",
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
 		"nomadic", "Medium", rollingOption, map[string]string{}, []string{}, []string{},

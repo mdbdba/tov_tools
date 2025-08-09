@@ -31,6 +31,9 @@ Tools for retrieving game tables and reference information.
 The project provides a RESTful API with endpoints for:
 
 - Character creation tools: `/api/v1/character/create`
+- Character get character by name: `/api/v1/character/name/:name`
+- Character get(GET) / update(PUT) / delete(DELETE) character by ID: `/api/v1/character/id/:id`
+- Character update character: `/api/v1/character/id`
 - Dice rolling operations: `/api/v1/dice/roll`
 - Static table lookup: `/api/v1/table/get`
 - Lineage lookup: `/api/v1/lineages`

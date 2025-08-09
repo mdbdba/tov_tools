@@ -15,7 +15,8 @@
   "shell": {
     "init_hook": [
       "echo 'Welcome to tov_tools!'",
-      "mdcat README.md"
+      "mdcat README.md",
+      "alias stgoland='goland .'"
     ]
   }
 }

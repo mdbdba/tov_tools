@@ -7,6 +7,7 @@ POST http://{{host}}/{{apiPath}}/character/create
 Content-Type: application/json
 
 {
+  "user_id": "Skelly",
   "name": "Test Fighter",
   "level": 1,
   "class": "Fighter",
@@ -76,6 +77,7 @@ Content-Type: application/json
 
         // Log character details
         client.log("--- CHARACTER DETAILS ---");
+        client.log("UserId: " + json.user_id);
         client.log("Name: " + json.name);
         client.log("Level: " + json.level);
         client.log("Class: " + json.class);
@@ -101,6 +103,7 @@ POST http://{{host}}/{{apiPath}}/character/create
 Content-Type: application/json
 
 {
+  "user_id": "Skelly",
   "name": "Test Cleric",
   "level": 2,
   "class": "Cleric",
@@ -292,6 +295,7 @@ PUT http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
 Content-Type: application/json
 
 {
+  "user_id": "Skelly",
   "name": "Updated Fighter",
   "level": 3,
   "class": "Fighter",
@@ -337,6 +341,7 @@ PUT http://{{host}}/{{apiPath}}/character/id/99999
 Content-Type: application/json
 
 {
+  "user_id": "Skelly",
   "name": "Should Not Work",
   "class": "Fighter",
   "lineage": "Human",
@@ -398,6 +403,8 @@ POST http://{{host}}/{{apiPath}}/character/create
 Content-Type: application/json
 
 {
+
+  "user_id": "Skelly",
   "name": "Invalid Lineage Character",
   "class": "Fighter",
   "lineage": "InvalidLineage",
@@ -416,6 +423,7 @@ POST http://{{host}}/{{apiPath}}/character/create
 Content-Type: application/json
 
 {
+  "user_id": "Skelly",
   "name": "Updated Fighter",
   "class": "Rogue",
   "lineage": "Elf",

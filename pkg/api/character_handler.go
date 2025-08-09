@@ -3,21 +3,21 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"tov_tools/pkg/character"
+	"tov_tools/pkg/types"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
-	"tov_tools/pkg/character"
-	"tov_tools/pkg/types"
 )
 
 // In-memory storage for characters (in a real app, this would be a database)
 var (
-	characters       = make(map[int]*character.Character)
+	characters       = make(map[string]*character.Character)
 	charactersByName = make(map[string]*character.Character)
 	nextID           = 1
 	charMutex        sync.RWMutex
@@ -86,6 +86,7 @@ func CreateCharacter(c *gin.Context) {
 
 	// Create the character
 	char, err := character.NewCharacter(
+		req.UserId,
 		req.Name,
 		level,
 		req.Class,
@@ -110,14 +111,12 @@ func CreateCharacter(c *gin.Context) {
 
 	// Store character with generated ID
 	charMutex.Lock()
-	id := nextID
-	nextID++
-	characters[id] = char
+	characters[char.ID] = char
 	charactersByName[strings.ToLower(req.Name)] = char
 	charMutex.Unlock()
 
 	// Convert to response format
-	response := convertToCharacterResponse(char, id)
+	response := convertToCharacterResponse(char)
 
 	c.JSON(http.StatusCreated, response)
 }
@@ -139,40 +138,24 @@ func GetCharacterByName(c *gin.Context) {
 		return
 	}
 
-	// Find the ID for this character
-	var id int
-	charMutex.RLock()
-	for charID, storedChar := range characters {
-		if storedChar == char {
-			id = charID
-			break
-		}
-	}
-	charMutex.RUnlock()
-
-	response := convertToCharacterResponse(char, id)
+	response := convertToCharacterResponse(char)
 	c.JSON(http.StatusOK, response)
 }
 
 // GetCharacterByID handles GET /api/v1/character/id/{id}
 func GetCharacterByID(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid character ID"})
-		return
-	}
 
 	charMutex.RLock()
-	char, exists := characters[id]
+	char, exists := characters[idStr]
 	charMutex.RUnlock()
 
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("character with ID %d not found", id)})
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("character with ID %s not found", idStr)})
 		return
 	}
 
-	response := convertToCharacterResponse(char, id)
+	response := convertToCharacterResponse(char)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -182,8 +165,8 @@ func GetAllCharacters(c *gin.Context) {
 	defer charMutex.RUnlock()
 
 	var responses []types.CharacterResponse
-	for id, char := range characters {
-		response := convertToCharacterResponse(char, id)
+	for _, char := range characters {
+		response := convertToCharacterResponse(char)
 		responses = append(responses, response)
 	}
 
@@ -193,18 +176,13 @@ func GetAllCharacters(c *gin.Context) {
 // UpdateCharacter handles PUT /api/v1/character/id/{id}
 func UpdateCharacter(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid character ID"})
-		return
-	}
 
 	charMutex.RLock()
-	char, exists := characters[id]
+	char, exists := characters[idStr]
 	charMutex.RUnlock()
 
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("character with ID %d not found", id)})
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("character with ID %s not found", idStr)})
 		return
 	}
 
@@ -228,37 +206,32 @@ func UpdateCharacter(c *gin.Context) {
 		char.Name = req.Name
 	}
 
-	response := convertToCharacterResponse(char, id)
+	response := convertToCharacterResponse(char)
 	c.JSON(http.StatusOK, response)
 }
 
 // DeleteCharacter handles DELETE /api/v1/character/id/{id}
 func DeleteCharacter(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid character ID"})
-		return
-	}
 
 	charMutex.Lock()
-	char, exists := characters[id]
+	char, exists := characters[idStr]
 	if exists {
-		delete(characters, id)
+		delete(characters, idStr)
 		delete(charactersByName, strings.ToLower(char.Name))
 	}
 	charMutex.Unlock()
 
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("character with ID %d not found", id)})
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("character with ID %s not found", idStr)})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("character with ID %d deleted successfully", id)})
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("character with ID %s deleted successfully", idStr)})
 }
 
 // convertToCharacterResponse converts a character.Character to CharacterResponse
-func convertToCharacterResponse(char *character.Character, id int) types.CharacterResponse {
+func convertToCharacterResponse(char *character.Character) types.CharacterResponse {
 	abilityScores := make(map[string]int)
 	abilityModifiers := make(map[string]int)
 
@@ -272,7 +245,8 @@ func convertToCharacterResponse(char *character.Character, id int) types.Charact
 	}
 
 	return types.CharacterResponse{
-		ID:               id,
+		UserId:           char.UserId,
+		ID:               char.ID,
 		Name:             char.Name,
 		Level:            char.OverallLevel,
 		Class:            char.CharacterClassStr,

@@ -31,7 +31,7 @@ func TestSkillBonusTalent(t *testing.T) {
 	// sortOrder := []string{"dex", "con", "str", "cha", "wis", "int"}
 	rollingOption := "common"
 	// Create a test character
-	testCharacter, err := NewCharacter(
+	testCharacter, err := NewCharacter("Skelly",
 		"Test Mage", 3, "Wizard", "battle mage",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
 		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
@@ -75,7 +75,7 @@ func TestFlatBonusTalent(t *testing.T) {
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 	rollingOption := "common"
 	// Create a test character
-	testCharacter, err := NewCharacter(
+	testCharacter, err := NewCharacter("Skelly",
 		"Test Fighter", 1, "Fighter", "weapon master",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
 		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
@@ -119,7 +119,7 @@ func TestSpellSwapTalent(t *testing.T) {
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 	rollingOption := "common"
 	// Create a test character
-	testCharacter, err := NewCharacter(
+	testCharacter, err := NewCharacter("Skelly",
 		"Test Wizard", 5, "Wizard", "battle mage",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
 		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)

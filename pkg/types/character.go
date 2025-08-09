@@ -4,6 +4,7 @@ import "time"
 
 // CharacterCreateRequest represents the request body for creating a character
 type CharacterCreateRequest struct {
+	UserId           string            `json:"user_id" binding:"required"`
 	Name             string            `json:"name" binding:"required"`
 	Level            *int              `json:"level,omitempty"`
 	Class            string            `json:"class" binding:"required"`
@@ -19,7 +20,8 @@ type CharacterCreateRequest struct {
 
 // CharacterResponse represents the response structure for character operations
 type CharacterResponse struct {
-	ID               int               `json:"id"`
+	UserId           string            `json:"user_id"`
+	ID               string            `json:"string"`
 	Name             string            `json:"name"`
 	Level            int               `json:"level"`
 	Class            string            `json:"class"`

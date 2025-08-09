@@ -262,6 +262,7 @@ type AuditEntry struct {
 
 // Character represents a character in the game
 type Character struct {
+	UserId                       string
 	ID                           string
 	Name                         string
 	OverallLevel                 int
@@ -963,6 +964,7 @@ func ValidateLanguages(languages []string) bool {
 //	  "pointbuy_twomax"   -  {15, 15, 11, 10, 10, 10}
 //	  "pointbuy_threemax" -  {15, 15, 15, 8, 8, 8}
 func NewCharacter(
+	userId string, // user that created the character
 	name string,
 	level int,
 	characterClassName string,
@@ -987,6 +989,7 @@ func NewCharacter(
 	if err != nil {
 		return nil, err
 	}
+	id = "pc" + id
 	Audit := HistoryAudit{
 		CharacterId:  id,
 		Audits:       make(map[string][]AuditEntry),
@@ -1132,6 +1135,7 @@ func NewCharacter(
 	}
 
 	character := &Character{
+		UserId:                       userId,
 		ID:                           id,
 		Name:                         name,
 		OverallLevel:                 level,

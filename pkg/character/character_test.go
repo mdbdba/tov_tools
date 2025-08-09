@@ -131,7 +131,7 @@ func TestCharacterCreation(t *testing.T) {
 		ctxRef := fmt.Sprintf("Character Lineage test: %s", testCase.lineageKey)
 		// Create a character to test against
 
-		character, err := NewCharacter(
+		character, err := NewCharacter("Skelly",
 			testCase.name, testCase.level, testCase.characterClassName,
 			testCase.selectedSubclassName,
 			testCase.lineageKey, testCase.heritageKey,
@@ -198,7 +198,7 @@ func TestSetAbilitySkills(t *testing.T) {
 	rollingOption := "common"
 	ctxRef := "Test SetAbilitySkills"
 	// Create a test character
-	testCharacter, err := NewCharacter(
+	testCharacter, err := NewCharacter("Skelly",
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
 		"nomadic", "Medium", rollingOption, map[string]string{}, []string{}, []string{},
@@ -298,7 +298,7 @@ func TestAbilityUpdateReflectsEverywhere(t *testing.T) {
 	rollingOption := "standard"
 	ctxRef := "Character Update test"
 
-	c, err := NewCharacter("Test Fighter", 1, "Fighter", "weapon master",
+	c, err := NewCharacter("Skelly", "Test Fighter", 1, "Fighter", "weapon master",
 		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
 		[]string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
 
@@ -345,7 +345,7 @@ func TestInvalidCharacterCreation(t *testing.T) {
 	for _, tc := range invalidLineageTests {
 		ctxRef := fmt.Sprintf("Character invalid Lineage test: %s", tc.lineageKey)
 
-		_, err := NewCharacter(
+		_, err := NewCharacter("Skelly",
 			"Test Wizard", 5, "Wizard",
 			"battle mage",
 			tc.lineageKey, "nomadic",
@@ -366,7 +366,7 @@ func TestCharacterWithNoTraits(t *testing.T) {
 
 	//character, err := createCharacter("Lineless", "elf", "Medium", nil)
 	// Create a test character
-	character, err := NewCharacter(
+	character, err := NewCharacter("Skelly",
 		"Mr NoTraits", 1, "ranger", "pack master",
 		"human", "nomadic",
 		"Medium", rollingOption,
@@ -396,7 +396,7 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 	for _, tc := range edgeCaseNames {
 		ctxRef := fmt.Sprintf("Character Name edge case test: %s", tc.name)
 
-		_, err := NewCharacter(
+		_, err := NewCharacter("Skelly",
 			tc.name, 1, "Wizard", "battle mage",
 			tc.lineageKey, tc.heritageKey,
 			Lineages[tc.lineageKey].SizeOptions[0], rollingOption,
@@ -423,7 +423,7 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 		{"sally", "human", "nomadic", "Huge"},
 	}
 	for _, tc := range edgeCaseSizes {
-		_, err := NewCharacter(
+		_, err := NewCharacter("Skelly",
 			tc.name, 1, "Wizard",
 			"battle mage",
 			tc.lineageKey, tc.heritageKey,
@@ -462,7 +462,7 @@ func TestInvalidInputsForNewCharacter(t *testing.T) {
 	for _, tc := range invalidInputs {
 		t.Run(tc.testCase, func(t *testing.T) {
 			ctxRef := "Invalid Inputs Test"
-			_, err := NewCharacter(
+			_, err := NewCharacter("Skelly",
 				tc.name, tc.level, tc.class, "battle mage",
 				"human", "nomadic", tc.size, tc.rollingOption, map[string]string{}, []string{},
 				[]string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
@@ -498,7 +498,7 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctxRef := fmt.Sprintf("Hit Point Generation Test: %s", tc.name)
 
-			character, err := NewCharacter(
+			character, err := NewCharacter("Skelly",
 				tc.name, tc.level, tc.class, tc.subClass,
 				"human", "nomadic", "Medium", "standard", map[string]string{},
 				[]string{}, []string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
@@ -533,7 +533,7 @@ func TestTemporaryHitPoints(t *testing.T) {
 
 	// Create a character
 	ctxRef := "Temporary HP Test"
-	character, err := NewCharacter(
+	character, err := NewCharacter("Skelly",
 		"Temp HP Tester", 4, "Warlock", "fiend",
 		"human", "cosmopolitan", "Small", "standard", map[string]string{},
 		[]string{}, []string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
