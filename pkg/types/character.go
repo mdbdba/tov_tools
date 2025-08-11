@@ -11,6 +11,7 @@ type CharacterCreateRequest struct {
 	Subclass         string            `json:"subclass,omitempty"`
 	Lineage          string            `json:"lineage" binding:"required"`
 	Heritage         string            `json:"heritage" binding:"required"`
+	Background       string            `json:"background" binding:"required"`
 	Size             string            `json:"size,omitempty"`
 	AbilityGenMethod string            `json:"ability_generation_method,omitempty"`
 	Traits           map[string]string `json:"traits,omitempty"`
@@ -21,13 +22,14 @@ type CharacterCreateRequest struct {
 // CharacterResponse represents the response structure for character operations
 type CharacterResponse struct {
 	UserId           string            `json:"user_id"`
-	ID               string            `json:"string"`
+	ID               string            `json:"id"`
 	Name             string            `json:"name"`
 	Level            int               `json:"level"`
 	Class            string            `json:"class"`
 	Subclass         string            `json:"subclass,omitempty"`
 	Lineage          string            `json:"lineage"`
 	Heritage         string            `json:"heritage"`
+	Background       string            `json:"background"`
 	Size             string            `json:"size"`
 	AbilityScores    map[string]int    `json:"ability_scores"`
 	AbilityModifiers map[string]int    `json:"ability_modifiers"`

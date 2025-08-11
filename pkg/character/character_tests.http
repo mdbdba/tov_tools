@@ -14,6 +14,7 @@ Content-Type: application/json
   "subclass": "Champion",
   "lineage": "Human",
   "heritage": "Cosmopolitan",
+  "background": "Scholar",
   "size": "Medium",
   "ability_generation_method": "standard",
   "traits": {
@@ -44,7 +45,7 @@ Content-Type: application/json
 
     if (json) {
         client.test("Response has character ID", function() {
-            client.assert(json.id !== undefined && json.id > 0, "Character ID is missing or invalid");
+            client.assert(json.id !== undefined && json.id !== "" && json.id !== null, "Character ID is missing or invalid");
         });
 
         client.test("Response has correct character name", function() {
@@ -59,6 +60,10 @@ Content-Type: application/json
             client.assert(json.heritage === "Cosmopolitan", "Heritage is not 'Cosmopolitan'");
         });
 
+        client.test("Response has correct background", function() {
+            client.assert(json.background === "Scholar", "Background is not 'Scholar'");
+        });
+
         client.test("Response has ability scores", function() {
             client.assert(json.ability_scores !== undefined, "Ability scores are missing");
             client.assert(Object.keys(json.ability_scores).length === 6, "Should have 6 ability scores");
@@ -71,7 +76,7 @@ Content-Type: application/json
 
         // Store the character ID for subsequent tests
         if (json.id) {
-            client.global.set("testCharacterId", json.id.toString());
+            client.global.set("testCharacterId", json.id);
             client.log("Created character with ID: " + json.id);
         }
 
@@ -84,6 +89,7 @@ Content-Type: application/json
         client.log("Subclass: " + json.subclass);
         client.log("Lineage: " + json.lineage);
         client.log("Heritage: " + json.heritage);
+        client.log("Background: " + json.background);
         client.log("Size: " + json.size);
 
         if (json.ability_scores) {
@@ -110,6 +116,7 @@ Content-Type: application/json
   "subclass": "Life Domain",
   "lineage": "Dwarf",
   "heritage": "Fireforge",
+  "background": "Adherent",
   "traits": {
     "background": "Acolyte"
   },
@@ -136,7 +143,7 @@ Content-Type: application/json
     }
 
     if (json && json.id) {
-        client.global.set("testCharacterId2", json.id.toString());
+        client.global.set("testCharacterId2", json.id);
         client.log("Created second character with ID: " + json.id);
     }
 %}
@@ -197,6 +204,7 @@ GET http://{{host}}/{{apiPath}}/character/name/NonExistentCharacter
     });
 %}
 
+
 ### Get Character by ID
 GET http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
 
@@ -221,15 +229,16 @@ GET http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
     if (json) {
         client.test("Retrieved correct character by ID", function() {
             client.assert(json.name === "Test Fighter", "Character name doesn't match");
-            client.assert(json.id.toString() === client.global.get("testCharacterId"), "Character ID doesn't match");
+            client.assert(json.id === client.global.get("testCharacterId"), "Character ID doesn't match");
         });
 
         client.log("Retrieved character by ID: " + json.name + " (ID: " + json.id + ")");
     }
 %}
 
+
 ### Get Character by ID (Non-existent - should return 404)
-GET http://{{host}}/{{apiPath}}/character/id/99999
+GET http://{{host}}/{{apiPath}}/character/id/nonexistent-string-id
 
 > {%
     client.log("=== NON-EXISTENT CHARACTER ID TEST ===");
@@ -238,13 +247,13 @@ GET http://{{host}}/{{apiPath}}/character/id/99999
     });
 %}
 
-### Get Character by ID (Invalid ID format - should return 400)
-GET http://{{host}}/{{apiPath}}/character/id/invalid
+### Get Character by ID (Any string ID format is valid now)
+GET http://{{host}}/{{apiPath}}/character/id/any-string-id
 
 > {%
-    client.log("=== INVALID CHARACTER ID TEST ===");
-    client.test("Invalid character ID returns 400", function() {
-        client.assert(response.status === 400, "Should return 400 for invalid character ID format");
+    client.log("=== ANY STRING ID TEST ===");
+    client.test("Any string ID format returns 404 for non-existent character", function() {
+        client.assert(response.status === 404, "Should return 404 for non-existent character ID");
     });
 %}
 
@@ -302,6 +311,7 @@ Content-Type: application/json
   "subclass": "Champion",
   "lineage": "Human",
   "heritage": "Cosmopolitan",
+  "background": "Soldier",
   "traits": {
     "background": "Soldier",
     "updated": "true"
@@ -337,7 +347,7 @@ Content-Type: application/json
 %}
 
 ### Update Character (Non-existent ID - should return 404)
-PUT http://{{host}}/{{apiPath}}/character/id/99999
+PUT http://{{host}}/{{apiPath}}/character/id/nonexistent-string-id
 Content-Type: application/json
 
 {
@@ -345,7 +355,8 @@ Content-Type: application/json
   "name": "Should Not Work",
   "class": "Fighter",
   "lineage": "Human",
-  "heritage": "Cosmopolitan"
+  "heritage": "Cosmopolitan",
+  "background": "Soldier"
 }
 
 > {%
@@ -403,12 +414,12 @@ POST http://{{host}}/{{apiPath}}/character/create
 Content-Type: application/json
 
 {
-
   "user_id": "Skelly",
   "name": "Invalid Lineage Character",
   "class": "Fighter",
   "lineage": "InvalidLineage",
-  "heritage": "Cosmopolitan"
+  "heritage": "Cosmopolitan",
+  "background": "Soldier"
 }
 
 > {%
@@ -427,7 +438,8 @@ Content-Type: application/json
   "name": "Updated Fighter",
   "class": "Rogue",
   "lineage": "Elf",
-  "heritage": "High"
+  "heritage": "High",
+  "background": "Scholar"
 }
 
 > {%
@@ -464,7 +476,7 @@ DELETE http://{{host}}/{{apiPath}}/character/id/{{testCharacterId}}
 %}
 
 ### Delete Character (Non-existent - should return 404)
-DELETE http://{{host}}/{{apiPath}}/character/id/99999
+DELETE http://{{host}}/{{apiPath}}/character/id/nonexistent-string-id
 
 > {%
     client.log("=== DELETE NON-EXISTENT CHARACTER TEST ===");

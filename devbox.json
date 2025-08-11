@@ -7,7 +7,8 @@
     "mdcat@2.7.1",
     "kubectl@1.33.1",
     "kubernetes-helm@3.17.3",
-    "golangci-lint@2.1.6"
+    "golangci-lint@2.1.6",
+    "httpie@3.2.4"
   ],
   "env": {
     "PATH": "$PATH:$PWD/bin"

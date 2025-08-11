@@ -26,6 +26,7 @@ func TestCharacterCreation(t *testing.T) {
 		level                   int
 		lineageKey              string
 		heritageKey             string
+		backgroundName          string
 		rollingOption           string
 		lineagePredefinedTraits []string
 		lineageSelectedTraits   map[string]string
@@ -38,6 +39,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   1,
 			lineageKey:              "beastkin",
 			heritageKey:             "slayer",
+			backgroundName:          "Outcast",
 			lineageExpectedSrc:      "Players Guide, pg 105",
 			lineageExpectedSize:     "Medium",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["beastkin"].Traits),
@@ -51,6 +53,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   1,
 			lineageKey:              "dwarf",
 			heritageKey:             "fireforge",
+			backgroundName:          "Soldier",
 			lineageExpectedSrc:      "Players Guide, pg 106",
 			lineageExpectedSize:     "Medium",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["dwarf"].Traits),
@@ -62,6 +65,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   1,
 			lineageKey:              "elf",
 			heritageKey:             "cloud",
+			backgroundName:          "Soldier",
 			lineageExpectedSrc:      "Players Guide, pg 106",
 			lineageExpectedSize:     "Medium",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["elf"].Traits),
@@ -73,6 +77,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   1,
 			lineageKey:              "human",
 			heritageKey:             "cosmopolitan",
+			backgroundName:          "Scholar",
 			lineageExpectedSrc:      "Players Guide, pg 107",
 			lineageExpectedSize:     "Small", // Or "Small" based on specific test cases
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["human"].Traits),
@@ -84,6 +89,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   1,
 			lineageKey:              "kobold",
 			heritageKey:             "salvager",
+			backgroundName:          "Maker",
 			lineageExpectedSrc:      "Players Guide, pg 108",
 			lineageExpectedSize:     "Small",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["kobold"].Traits),
@@ -95,6 +101,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   1,
 			lineageKey:              "orc",
 			heritageKey:             "diaspora",
+			backgroundName:          "Adherent",
 			lineageExpectedSrc:      "Players Guide, pg 108",
 			lineageExpectedSize:     "Medium",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["orc"].Traits),
@@ -107,6 +114,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   5,
 			lineageKey:              "syderean",
 			heritageKey:             "anointed",
+			backgroundName:          "Scholar",
 			lineageExpectedSrc:      "Players Guide, pg 109",
 			lineageExpectedSize:     "Medium",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["syderean"].Traits),
@@ -118,6 +126,7 @@ func TestCharacterCreation(t *testing.T) {
 			level:                   3,
 			lineageKey:              "smallfolk",
 			heritageKey:             "cottage",
+			backgroundName:          "Criminal",
 			lineageExpectedSrc:      "Players Guide, pg 109",
 			lineageExpectedSize:     "Small",
 			lineagePredefinedTraits: helpers.GetMapKeys(PredefinedTraitsData["smallfolk"].Traits),
@@ -134,10 +143,11 @@ func TestCharacterCreation(t *testing.T) {
 		character, err := NewCharacter("Skelly",
 			testCase.name, testCase.level, testCase.characterClassName,
 			testCase.selectedSubclassName,
-			testCase.lineageKey, testCase.heritageKey,
-			Lineages[testCase.lineageKey].SizeOptions[0], rollingOption,
-			testCase.lineageSelectedTraits, []string{}, []string{},
-			"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+			testCase.lineageKey, testCase.heritageKey, testCase.backgroundName,
+			rollingOption, testCase.lineageSelectedTraits, []string{}, []string{},
+			"Standard", ClassBuildType{},
+			CharacterDescription{Size: Lineages[testCase.lineageKey].SizeOptions[0]},
+			ctxRef, observedLoggerSugared)
 
 		if err != nil {
 			t.Fatalf("Error creating character: %v", err)
@@ -163,9 +173,9 @@ func TestCharacterCreation(t *testing.T) {
 		}
 
 		// Check chosen size
-		if character.CharacterSize != testCase.lineageExpectedSize {
+		if character.Description.Size != testCase.lineageExpectedSize {
 			t.Errorf("Expected chosen size to be '%s', but got '%s' for %s",
-				testCase.lineageExpectedSize, character.CharacterSize,
+				testCase.lineageExpectedSize, character.Description.Size,
 				testCase.name)
 		}
 
@@ -201,8 +211,10 @@ func TestSetAbilitySkills(t *testing.T) {
 	testCharacter, err := NewCharacter("Skelly",
 		"Test Wizard", 5, "Wizard",
 		"battle mage", "human",
-		"nomadic", "Medium", rollingOption, map[string]string{}, []string{}, []string{},
-		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+		"nomadic", "Scholar",
+		rollingOption, map[string]string{}, []string{}, []string{},
+		"Standard", ClassBuildType{}, CharacterDescription{Size: "Medium"},
+		ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	testCharacter.SkillProficiencies = map[string]AbilitySkillProficiency{
 		"athletics": {Skill: "athletics", Source: "Training"},
@@ -299,8 +311,9 @@ func TestAbilityUpdateReflectsEverywhere(t *testing.T) {
 	ctxRef := "Character Update test"
 
 	c, err := NewCharacter("Skelly", "Test Fighter", 1, "Fighter", "weapon master",
-		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		[]string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+		"human", "nomadic", "Soldier", rollingOption,
+		map[string]string{}, []string{}, []string{}, "Standard",
+		ClassBuildType{}, CharacterDescription{Size: "Medium"}, ctxRef, observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	fmt.Println("BEFORE")
@@ -348,10 +361,10 @@ func TestInvalidCharacterCreation(t *testing.T) {
 		_, err := NewCharacter("Skelly",
 			"Test Wizard", 5, "Wizard",
 			"battle mage",
-			tc.lineageKey, "nomadic",
-			"medium", rollingOption,
-			map[string]string{}, []string{}, []string{},
-			"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+			tc.lineageKey, "nomadic", "Scholar",
+			rollingOption, map[string]string{}, []string{}, []string{},
+			"Standard", ClassBuildType{}, CharacterDescription{Size: "Medium"},
+			ctxRef, observedLoggerSugared)
 
 		assert.Error(t, err, "Expected error when creating character with invalid size")
 	}
@@ -368,10 +381,10 @@ func TestCharacterWithNoTraits(t *testing.T) {
 	// Create a test character
 	character, err := NewCharacter("Skelly",
 		"Mr NoTraits", 1, "ranger", "pack master",
-		"human", "nomadic",
-		"Medium", rollingOption,
-		map[string]string{}, []string{}, []string{},
-		"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+		"human", "nomadic", "Rustic",
+		rollingOption, map[string]string{}, []string{}, []string{},
+		"Standard", ClassBuildType{}, CharacterDescription{Size: "Medium"},
+		ctxRef, observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating character with no Traits")
 	assert.Equal(t, 0, len(character.Traits), "Expected no chosen Traits")
@@ -384,13 +397,14 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 	rollingOption := "standard"
 
 	edgeCaseNames := []struct {
-		name        string
-		lineageKey  string
-		heritageKey string
+		name           string
+		lineageKey     string
+		heritageKey    string
+		backgroundName string
 	}{
-		{"", "human", "nomadic"},
-		{"@InvalidName!", "dwarf", "fireforge"},
-		{"1234", "elf", "grove"},
+		{"", "human", "nomadic", "rustic"},
+		{"@InvalidName!", "dwarf", "fireforge", "Soldier"},
+		{"1234", "elf", "grove", "scholar"},
 	}
 
 	for _, tc := range edgeCaseNames {
@@ -398,10 +412,11 @@ func TestCharacterWithEdgeCaseNames(t *testing.T) {
 
 		_, err := NewCharacter("Skelly",
 			tc.name, 1, "Wizard", "battle mage",
-			tc.lineageKey, tc.heritageKey,
-			Lineages[tc.lineageKey].SizeOptions[0], rollingOption,
-			map[string]string{}, []string{}, []string{},
-			"Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+			tc.lineageKey, tc.heritageKey, tc.backgroundName,
+			rollingOption, map[string]string{}, []string{}, []string{},
+			"Standard", ClassBuildType{},
+			CharacterDescription{Size: Lineages[tc.lineageKey].SizeOptions[0]},
+			ctxRef, observedLoggerSugared)
 
 		assert.Error(t, err, fmt.Sprintf("Expected error when creating %s character with invalid Name", tc.lineageKey))
 	}
@@ -414,22 +429,24 @@ func TestCharacterWithEdgeCaseSizes(t *testing.T) {
 	rollingOption := "standard"
 
 	edgeCaseSizes := []struct {
-		name        string
-		lineageKey  string
-		heritageKey string
-		size        string
+		name           string
+		lineageKey     string
+		heritageKey    string
+		backgroundName string
+		size           string
 	}{
-		{"bob", "human", "nomadic", "Tiny"},
-		{"sally", "human", "nomadic", "Huge"},
+		{"bob", "human", "nomadic", "Soldier", "Tiny"},
+		{"sally", "human", "nomadic", "Soldier", "Huge"},
 	}
 	for _, tc := range edgeCaseSizes {
 		_, err := NewCharacter("Skelly",
 			tc.name, 1, "Wizard",
 			"battle mage",
-			tc.lineageKey, tc.heritageKey,
-			tc.size, rollingOption,
-			map[string]string{}, []string{}, []string{},
-			"Standard", ClassBuildType{}, "Character Size Edge Case", observedLoggerSugared)
+			tc.lineageKey, tc.heritageKey, tc.backgroundName,
+			rollingOption, map[string]string{}, []string{}, []string{},
+			"Standard", ClassBuildType{},
+			CharacterDescription{Size: tc.size}, "Character Size Edge Case",
+			observedLoggerSugared)
 		if err == nil {
 			t.Errorf("Character creation should have failed for Name '%s' tested size: %s", tc.name, tc.size)
 		}
@@ -464,8 +481,11 @@ func TestInvalidInputsForNewCharacter(t *testing.T) {
 			ctxRef := "Invalid Inputs Test"
 			_, err := NewCharacter("Skelly",
 				tc.name, tc.level, tc.class, "battle mage",
-				"human", "nomadic", tc.size, tc.rollingOption, map[string]string{}, []string{},
-				[]string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+				"human", "nomadic", "Scholar",
+				tc.rollingOption, map[string]string{}, []string{},
+				[]string{}, "Standard", ClassBuildType{},
+				CharacterDescription{Size: tc.size},
+				ctxRef, observedLoggerSugared)
 
 			if tc.expectError {
 				assert.Error(t, err, "Expected error for invalid input")
@@ -481,17 +501,18 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 	observedLoggerSugared := zap.New(observedZapCore).Sugar()
 
 	hitPointTests := []struct {
-		name     string
-		class    string
-		subClass string
-		level    int
+		name           string
+		class          string
+		subClass       string
+		backgroundName string
+		level          int
 	}{
-		{"OverallLevel One Wizard", "wizard", "battle mage", 1},
-		{"OverallLevel Five Fighter", "fighter", "weapon master", 5},
-		{"OverallLevel Two Cleric", "cleric", "life domain", 2},
-		{"OverallLevel Three Rogue", "rogue", "enforcer", 3},
-		{"OverallLevel Ten Barbarian", "barbarian", "berserker", 10},
-		{"OverallLevel Twenty Ranger", "ranger", "hunter", 20},
+		{"OverallLevel One Wizard", "wizard", "battle mage", "Scholar", 1},
+		{"OverallLevel Five Fighter", "fighter", "weapon master", "Soldier", 5},
+		{"OverallLevel Two Cleric", "cleric", "life domain", "Adherent", 2},
+		{"OverallLevel Three Rogue", "rogue", "enforcer", "Criminal", 3},
+		{"OverallLevel Ten Barbarian", "barbarian", "berserker", "Outcast", 10},
+		{"OverallLevel Twenty Ranger", "ranger", "hunter", "Rustic", 20},
 	}
 
 	for _, tc := range hitPointTests {
@@ -500,8 +521,11 @@ func TestHitPointGenerationAtCreation(t *testing.T) {
 
 			character, err := NewCharacter("Skelly",
 				tc.name, tc.level, tc.class, tc.subClass,
-				"human", "nomadic", "Medium", "standard", map[string]string{},
-				[]string{}, []string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+				"human", "nomadic", tc.backgroundName,
+				"standard", map[string]string{}, []string{}, []string{},
+				"Standard", ClassBuildType{},
+				CharacterDescription{Size: "Medium"},
+				ctxRef, observedLoggerSugared)
 
 			if err != nil {
 				t.Fatalf("Error creating character %s: %v", tc.name, err)
@@ -535,8 +559,10 @@ func TestTemporaryHitPoints(t *testing.T) {
 	ctxRef := "Temporary HP Test"
 	character, err := NewCharacter("Skelly",
 		"Temp HP Tester", 4, "Warlock", "fiend",
-		"human", "cosmopolitan", "Small", "standard", map[string]string{},
-		[]string{}, []string{}, "Standard", ClassBuildType{}, ctxRef, observedLoggerSugared)
+		"human", "cosmopolitan", "Scholar",
+		"standard", map[string]string{}, []string{}, []string{},
+		"Standard", ClassBuildType{}, CharacterDescription{Size: "Small"},
+		ctxRef, observedLoggerSugared)
 	assert.NoError(t, err, "Unexpected error when creating character")
 
 	// Add temporary HP

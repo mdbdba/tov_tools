@@ -1,4 +1,4 @@
-FROM library/postgres:12
+FROM library/postgres:17.5
 RUN apt-get update && apt-get install -y sharutils
 ADD scripts/set_passes.sh /
 COPY sql/init.src /

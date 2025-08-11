@@ -20,6 +20,7 @@ func main() {
 	subclassName := flag.String("subclass", "", "The subclass of the character to create")
 	lineageName := flag.String("lineage", "", "The lineage of the character to create")
 	heritageName := flag.String("heritage", "", "The heritage of the character to create")
+	backgroundName := flag.String("background", "", "The background of the character to create")
 	sizeName := flag.String("size", "", "The size of the character to create")
 	abilityGenMethod := flag.String("ability-generation", "standard", "The ability generation method")
 	selectedTraitsJSON := flag.String("traits", "", "The traits of the character to create (JSON format)")
@@ -44,6 +45,10 @@ func main() {
 	}
 	if *heritageName == "" {
 		fmt.Printf("heritage name is required\n")
+		os.Exit(2)
+	}
+	if *backgroundName == "" {
+		fmt.Printf("background name is required\n")
 		os.Exit(2)
 	}
 
@@ -85,6 +90,7 @@ func main() {
 		Subclass:         *subclassName,
 		Lineage:          *lineageName,
 		Heritage:         *heritageName,
+		Background:       *backgroundName,
 		Size:             *sizeName,
 		AbilityGenMethod: *abilityGenMethod,
 		Traits:           selectedTraits,
@@ -149,6 +155,7 @@ func printCharacterDetails(character types.CharacterResponse) {
 	fmt.Printf("Name: %s\n", character.Name)
 	fmt.Printf("Level: %d\n", character.Level)
 	fmt.Printf("Class: %s\n", character.Class)
+	fmt.Printf("Background: %s\n", character.Background)
 	if character.Subclass != "" {
 		fmt.Printf("Subclass: %s\n", character.Subclass)
 	}

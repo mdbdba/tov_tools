@@ -260,11 +260,37 @@ type AuditEntry struct {
 	Timestamp time.Time   // When the change occurred
 }
 
+type SelectedTraits struct {
+	Name                string
+	Description         string
+	addToCharacter      func(c *Character) error
+	removeFromCharacter func(c *Character) error
+}
+
+type LineageSelectionstruct struct {
+	LineageName string
+	Traits      map[string]SelectedTraits
+}
+
+type CharacterDescription struct {
+	Age          int    `json:"age"`
+	Size         string `json:"size"`
+	HeightFeet   int    `json:"height_feet"`
+	HeightInches int    `json:"height_inches"`
+	WeightPounds int    `json:"weight_pounds"`
+	Gender       string `json:"gender"`
+	EyeColor     string `json:"eye_color"`
+	HairColor    string `json:"hair_color"`
+	SkinColor    string `json:"skin_color"`
+	Description  string `json:"description"`
+}
+
 // Character represents a character in the game
 type Character struct {
 	UserId                       string
 	ID                           string
 	Name                         string
+	Description                  *CharacterDescription
 	OverallLevel                 int
 	CharacterLevels              map[string]int
 	CharacterClassStr            string // if multiclassing this will be class 1/class 2/class 3/etc
@@ -284,7 +310,6 @@ type Character struct {
 	Background                   Background
 	BackgroundChoices            map[string][]string
 	BackgroundInputRequired      bool
-	CharacterSize                string
 	Traits                       map[string]string
 	TraitChoices                 map[string][]string
 	BaseSkills                   map[string]int
@@ -321,7 +346,7 @@ type Character struct {
 	Conditions                   map[string]string // key = condition name, value = note
 	AbilityScoreOrderPreference  []string
 	KeyAbilities                 []string
-	History                      HistoryAudit
+	History                      *HistoryAudit
 }
 
 // HistoryAudit represents an auditable record for the character.  When there's
@@ -971,13 +996,14 @@ func NewCharacter(
 	selectedSubclassName string,
 	lineageName string,
 	heritageName string,
-	chosenSize string,
+	backgroundName string,
 	rollingOption string,
 	chosenTraits map[string]string,
 	chosenTalents []string,
 	chosenLanguages []string,
 	classBuildType string,
 	manualBuildType ClassBuildType,
+	description CharacterDescription,
 	ctxRef string,
 	logger *zap.SugaredLogger) (*Character, error) {
 
@@ -985,12 +1011,13 @@ func NewCharacter(
 	useClass := Class{}
 	useLineage := Lineage{}
 	useHeritage := Heritage{}
+	useBackground := Background{}
 	id, err := helpers.GenerateRandomString(13)
 	if err != nil {
 		return nil, err
 	}
 	id = "pc" + id
-	Audit := HistoryAudit{
+	Audit := &HistoryAudit{
 		CharacterId:  id,
 		Audits:       make(map[string][]AuditEntry),
 		DamageAudits: make([]DamageAudit, 0),
@@ -1075,15 +1102,20 @@ func NewCharacter(
 		return nil, fmt.Errorf("No Heritage specified. ")
 	}
 
-	if chosenSize != "" {
-		err = ValidateSize(chosenSize, useLineage)
+	if description.Size != "" {
+		err = ValidateSize(description.Size, useLineage)
 		if err != nil {
 			return nil, fmt.Errorf("The %s size is not valid for %s: %v\n",
-				chosenSize, useLineage.Name, err)
+				description.Size, useLineage.Name, err)
 		}
 	} else {
 		fmt.Println("No character size specified. Using random selection instead.")
-		chosenSize = RandomSize(useLineage)
+		description.Size = RandomSize(useLineage)
+	}
+
+	useBackground, err = GetBackgroundByName(backgroundName)
+	if err != nil {
+		return nil, fmt.Errorf("'%s' is not a valid background: %v\n", backgroundName, err)
 	}
 
 	useLanguages := useHeritage.LanguageDefaults
@@ -1134,15 +1166,20 @@ func NewCharacter(
 		useKeyAbilities = manualBuildType.KeyAbilities
 	}
 
+	// saves a pointer to the description struct
+	Description := &description
+
 	character := &Character{
 		UserId:                       userId,
 		ID:                           id,
 		Name:                         name,
+		Description:                  Description,
 		OverallLevel:                 level,
 		CharacterClassStr:            characterClassName,
 		CharacterClassBuildType:      classBuildInfo,
 		CharacterSubClassToImplement: selectedSubclass,
 		CharacterSubClass:            implementedSubclass,
+		Background:                   useBackground,
 		HitDice:                      hd,
 		DamageTypeAdjustments:        make(map[string]string),
 		HitPointBonuses:              make(map[string]int),
@@ -1153,7 +1190,6 @@ func NewCharacter(
 		Lineage:                      useLineage,
 		KnownLanguages:               useLanguages,
 		Heritage:                     useHeritage,
-		CharacterSize:                chosenSize,
 		Traits:                       chosenTraits,
 		Abilities:                    *a,
 		Talents:                      map[string]Talent{},
@@ -1212,7 +1248,7 @@ func (c *Character) PrintDetails() {
 	fmt.Printf("Current Hit Points: %d\n", c.CurrentHitPoints)
 
 	c.Lineage.PrintDetails()
-	fmt.Printf("Chosen Size: %s\n", c.CharacterSize)
+	fmt.Printf("Chosen Size: %s\n", c.Description.Size)
 	fmt.Println("Chosen Traits:")
 	for traitType, trait := range c.Traits {
 		fmt.Printf("  %s: %s\n", traitType, trait)

@@ -33,8 +33,11 @@ func TestSkillBonusTalent(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter("Skelly",
 		"Test Mage", 3, "Wizard", "battle mage",
-		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
+		"human", "nomadic", "Scholar",
+		rollingOption, map[string]string{}, []string{},
+		[]string{}, "Standard", ClassBuildType{},
+		CharacterDescription{Size: "Medium"},
+		"Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	testCharacter.BaseSkillBonus = map[string]int{"Arcana": 0}
@@ -77,8 +80,10 @@ func TestFlatBonusTalent(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter("Skelly",
 		"Test Fighter", 1, "Fighter", "weapon master",
-		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
+		"human", "nomadic", "Soldier", rollingOption, map[string]string{}, []string{},
+		[]string{}, "Standard", ClassBuildType{},
+		CharacterDescription{Size: "Medium"},
+		"Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Unexpected error when creating test character")
 	// Add the talent to the character
@@ -121,8 +126,11 @@ func TestSpellSwapTalent(t *testing.T) {
 	// Create a test character
 	testCharacter, err := NewCharacter("Skelly",
 		"Test Wizard", 5, "Wizard", "battle mage",
-		"human", "nomadic", "Medium", rollingOption, map[string]string{}, []string{},
-		[]string{}, "Standard", ClassBuildType{}, "Character talent test", observedLoggerSugared)
+		"human", "nomadic", "Scholar",
+		rollingOption, map[string]string{}, []string{},
+		[]string{}, "Standard", ClassBuildType{},
+		CharacterDescription{Size: "Medium"},
+		"Character talent test", observedLoggerSugared)
 
 	assert.NoError(t, err, "Error creating test character")
 	testCharacter.SpellBook = []string{"Firebolt", "Mage Armor"}

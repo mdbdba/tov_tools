@@ -427,6 +427,7 @@ type CLIArgs struct {
 	subclass     string
 	lineage      string
 	heritage     string
+	background   string
 	traitsJSON   string
 	parsedTraits map[string]string
 }
@@ -435,13 +436,14 @@ func parseArgs(args []string) (CLIArgs, error) {
 	// Create a new flag set for testing
 	fs := flag.NewFlagSet("test", flag.ContinueOnError)
 	fs.SetOutput(bytes.NewBuffer(nil)) // Suppress output during tests
-	user_id := fs.String("user_id", "Skelly", "The name of the creator of the character")
+	userId := fs.String("user_id", "Skelly", "The name of the creator of the character")
 	name := fs.String("name", "", "The name of the character to create")
 	level := fs.Int("level", 1, "The level of the character to create")
 	class := fs.String("class", "", "The class of the character to create")
 	subclass := fs.String("subclass", "", "The subclass of the character to create")
 	lineage := fs.String("lineage", "", "The lineage of the character to create")
 	heritage := fs.String("heritage", "", "The heritage of the character to create")
+	background := fs.String("background", "", "The background of the character to create")
 	traitsJSON := fs.String("traits", "", "The traits of the character to create")
 
 	err := fs.Parse(args)
@@ -461,13 +463,14 @@ func parseArgs(args []string) (CLIArgs, error) {
 	}
 
 	return CLIArgs{
-		user_id:      *user_id,
+		user_id:      *userId,
 		name:         *name,
 		level:        *level,
 		class:        *class,
 		subclass:     *subclass,
 		lineage:      *lineage,
 		heritage:     *heritage,
+		background:   *background,
 		traitsJSON:   *traitsJSON,
 		parsedTraits: parsedTraits,
 	}, nil
@@ -493,7 +496,7 @@ func createCharacterFromArgs(args CLIArgs) (*character.Character, error) {
 	// This would call your actual NewCharacter function
 	return character.NewCharacter(args.user_id,
 		args.name, args.level, args.class,
-		args.subclass, args.lineage, args.heritage,
+		args.subclass, args.lineage, args.heritage, args.background,
 		character.Lineages[args.lineage].SizeOptions[0], "common",
 		args.parsedTraits, []string{}, []string{},
 		"Standard", character.ClassBuildType{}, ctxRef, observedLoggerSugared) // Using nil for logger in tests
@@ -560,8 +563,8 @@ func TestCLIHelp(t *testing.T) {
 	helpOutput := stdout.String()
 
 	// Verify help output contains expected flag descriptions
-	expectedFlags := []string{"-name", "-level", "-class", "-lineage", "-heritage", "-traits"}
-	for _, flag := range expectedFlags {
-		assert.Contains(t, helpOutput, flag, fmt.Sprintf("Help should contain %s flag", flag))
+	expectedFlags := []string{"-user_id", "-name", "-level", "-class", "-lineage", "-heritage", "-background", "-traits"}
+	for _, f := range expectedFlags {
+		assert.Contains(t, helpOutput, f, fmt.Sprintf("Help should contain %s flag", f))
 	}
 }
